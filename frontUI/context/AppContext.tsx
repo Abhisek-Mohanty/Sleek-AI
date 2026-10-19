@@ -10,8 +10,6 @@ import {
   FunnelExecution,
   FunnelStage,
   SimulatedMessage,
-  LeadSource,
-  EnquiryStatus,
 } from "@/types";
 import {
   INITIAL_ENQUIRIES,
@@ -38,7 +36,7 @@ interface AppContextType {
   notifications: { id: string; title: string; time: string; type: string; unread: boolean }[];
   markNotificationsAsRead: () => void;
   // Enquiry operations
-  addEnquiry: (enquiry: Partial<Enquiry>) => Enquiry;
+  addEnquiry: (enquiry: Partial<Enquiry>, options?: { silent?: boolean }) => Enquiry;
   updateEnquiry: (id: string, updates: Partial<Enquiry>) => void;
   deleteEnquiry: (id: string) => void;
   bulkUpdateEnquiries: (ids: string[], updates: Partial<Enquiry>) => void;
@@ -167,7 +165,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Enquiry operations
-  const addEnquiry = (data: Partial<Enquiry>): Enquiry => {
+  const addEnquiry = (data: Partial<Enquiry>, options?: { silent?: boolean }): Enquiry => {
     const defaultRep = representatives[0];
     const defaultStage = activeFunnel?.stages[0];
 
@@ -182,7 +180,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const status = data.status || "New";
 
     const newEnquiry: Enquiry = {
-      id: `enq_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      id: data.id ? String(data.id) : `enq_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
       enquiryNumber: data.enquiryNumber || `ENQ-${Math.floor(100000 + Math.random() * 900000)}`,
       firstName,
       lastName,
@@ -240,9 +238,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }));
     }
 
-    toast.success("Enquiry created successfully", {
-      description: `${newEnquiry.fullName} has been added to ${activeFunnel?.name || "funnel"}.`,
-    });
+    if (!options?.silent) {
+      toast.success("Enquiry created successfully", {
+        description: `${newEnquiry.fullName} has been added to ${activeFunnel?.name || "funnel"}.`,
+      });
+    }
 
     return newEnquiry;
   };
@@ -270,49 +270,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const defaultRep = representatives[0];
     const defaultStage = activeFunnel?.stages[0];
 
-    const newItems: Enquiry[] = records.map((rec, index) => {
-      const fullName =
-        rec.fullName ||
-        [rec.firstName, rec.lastName].filter(Boolean).join(" ") ||
-        "Unnamed Lead";
-      const firstName = rec.firstName || (rec.fullName ? rec.fullName.split(" ")[0] : "");
-      const lastName = rec.lastName || (rec.fullName ? rec.fullName.split(" ").slice(1).join(" ") : "");
-      const source = rec.source || (rec.sourceType as LeadSource) || "Website";
-      const sourceType = rec.sourceType || source;
-      const status = rec.status || "New";
-
-      return {
-        id: `enq_imp_${Date.now()}_${index}`,
-        enquiryNumber: rec.enquiryNumber || `ENQ-${Math.floor(100000 + Math.random() * 900000)}`,
-        firstName,
-        lastName,
-        fullName,
-        mobile: rec.mobile || "+1 (555) 000-0000",
-        email: rec.email || `lead${index}@example.com`,
-        city: rec.city || "New York",
-        company: rec.company || "Business Corp",
-        source,
-        sourceType,
-        dateCreated: new Date().toISOString(),
-        assignedRepId: defaultRep.id,
-        assignedRepName: defaultRep.name,
-        currentFunnelId: activeFunnelId,
-        currentStageId: defaultStage?.id || "stg_new",
-        currentStageName: defaultStage?.name || "New Lead",
-        status,
-        priority: rec.priority || "Medium",
-        lastContactedDate: new Date().toISOString(),
-        nextFollowUpDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-        leadScore: Math.floor(Math.random() * 40) + 55,
-        estimatedValue: rec.estimatedValue || 20000 + Math.floor(Math.random() * 30000),
-        tags: ["Imported", "Batch"],
-        notes: [],
-        aiSummary: "Enquiry imported via spreadsheet. AI prioritization pending.",
-        aiRecommendedAction: "Enroll in active outreach workflow and initiate discovery touch.",
-        daysInStage: 0,
-        activitiesCount: 0,
-      };
-    });
+    const newItems: Enquiry[] = records.map((rec, index) => ({
+      id: `enq_imp_${Date.now()}_${index}`,
+      fullName: rec.fullName || "Unnamed Lead",
+      mobile: rec.mobile || "+1 (555) 000-0000",
+      email: rec.email || `lead${index}@example.com`,
+      city: rec.city || "New York",
+      company: rec.company || "Business Corp",
+      source: rec.source || "Website",
+      dateCreated: new Date().toISOString(),
+      assignedRepId: defaultRep.id,
+      assignedRepName: defaultRep.name,
+      currentFunnelId: activeFunnelId,
+      currentStageId: defaultStage?.id || "stg_new",
+      currentStageName: defaultStage?.name || "New Lead",
+      status: "New",
+      priority: rec.priority || "Medium",
+      lastContactedDate: new Date().toISOString(),
+      nextFollowUpDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+      leadScore: Math.floor(Math.random() * 40) + 55,
+      estimatedValue: rec.estimatedValue || 20000 + Math.floor(Math.random() * 30000),
+      tags: ["Imported", "Batch"],
+      notes: [],
+      aiSummary: "Enquiry imported via spreadsheet. AI prioritization pending.",
+      aiRecommendedAction: "Enroll in active outreach workflow and initiate discovery touch.",
+      daysInStage: 0,
+      activitiesCount: 0,
+    }));
 
     setEnquiries((prev) => [...newItems, ...prev]);
 
@@ -377,8 +361,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         f.id === funnelId
           ? activated
           : f.status === "active"
-          ? { ...f, status: "draft" }
-          : f
+            ? { ...f, status: "draft" }
+            : f
       )
     );
 
@@ -410,7 +394,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         spread: 70,
         origin: { y: 0.6 },
       });
-    } catch {}
+    } catch { }
 
     toast.success(`Funnel "${activated.name}" is now ACTIVE!`, {
       description: `All associated leads have been enrolled in ${activated.stages[0]?.name || "Stage 1"}.`,
@@ -541,7 +525,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (isLastStage) {
       try {
         confetti({ particleCount: 70, spread: 60 });
-      } catch {}
+      } catch { }
       toast.success("Lead converted!", {
         description: `Enquiry has reached the final stage: ${stage.name}`,
       });
@@ -724,7 +708,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setSettings(INITIAL_SETTINGS);
     try {
       localStorage.removeItem(STORAGE_KEY);
-    } catch {}
+    } catch { }
     toast.success("Workspace reset to initial demo dataset");
   };
 

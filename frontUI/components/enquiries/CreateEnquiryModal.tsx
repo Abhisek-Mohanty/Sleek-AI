@@ -1,10 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import axios from "axios";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { X, Sparkles, UserPlus } from "lucide-react";
+import { X, Sparkles, UserPlus, Loader2 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { LeadSource, EnquiryStatus } from "@/types";
 import { toast } from "sonner";
@@ -33,7 +34,7 @@ export const STATUS_OPTIONS: any = {
 const enquirySchema = z.object({
   firstName: z.string().trim().min(1, "First name is required"),
   lastName: z.string().trim().min(1, "Last name is required"),
-  mobile: z.string().trim().min(6, "Please enter a valid mobile number"),
+  mobile: z.string().trim().min(10, "Mobile number must be at least 10 digits"),
   email: z.string().trim().email("Please enter a valid email address"),
   status: z.coerce.number().default(1),
   sourceType: z.coerce.number().default(1),
@@ -50,6 +51,7 @@ export type CreateEnquiryPayload = {
 
 export function CreateEnquiryModal() {
   const { isCreateEnquiryOpen, setIsCreateEnquiryOpen, addEnquiry, activeFunnel } = useApp();
+  const [isLoading, setIsLoading] = useState(false);
 
   const {
     register,
@@ -70,8 +72,8 @@ export function CreateEnquiryModal() {
 
   if (!isCreateEnquiryOpen) return null;
 
-  const onSubmit = (data: z.infer<typeof enquirySchema>) => {
-    // Construct the explicit payload requested with numeric status and sourceType
+  const onSubmit = async (data: z.infer<typeof enquirySchema>) => {
+    // Construct the explicit payload for http://localhost:8000/enquiry/create
     const payload: CreateEnquiryPayload = {
       firstName: data.firstName.trim(),
       lastName: data.lastName.trim(),
@@ -81,30 +83,89 @@ export function CreateEnquiryModal() {
       sourceType: Number(data.sourceType),
     };
 
-    // Log the created payload to the console
-    console.log("Created Enquiry Payload:", payload);
+    console.log("Calling API http://localhost:8000/enquiry/create with axios:", payload);
+    setIsLoading(true);
 
-    const statusLabel = STATUS_OPTIONS[payload.status] || "New";
-    const sourceLabel = SOURCE_TYPE_OPTIONS[payload.sourceType] || "Website";
+    try {
+      // POST call to backend using axios
+      const response = await axios.post("http://localhost:8000/enquiry/create", payload, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-    // Save and enroll enquiry into the application state
-    addEnquiry({
-      firstName: payload.firstName,
-      lastName: payload.lastName,
-      fullName: `${payload.firstName} ${payload.lastName}`.trim(),
-      mobile: payload.mobile,
-      email: payload.email,
-      status: statusLabel,
-      source: sourceLabel,
-      sourceType: payload.sourceType,
-    });
+      const resData = response.data;
+      const createdData = resData?.data || payload;
+      const statusLabel = STATUS_OPTIONS[createdData.status ?? payload.status] || "New";
+      const sourceLabel = SOURCE_TYPE_OPTIONS[createdData.sourceType ?? payload.sourceType] || "Website";
 
-    toast.success("Enquiry created successfully", {
-      description: `${payload.firstName} ${payload.lastName} (Status: ${statusLabel}, Source: ${sourceLabel}) enrolled into ${activeFunnel?.name || "Active Funnel"}.`,
-    });
+      addEnquiry(
+        {
+          id: createdData.id ? String(createdData.id) : undefined,
+          enquiryNumber: createdData.enquiryNumber || undefined,
+          firstName: createdData.firstName || payload.firstName,
+          lastName: createdData.lastName || payload.lastName,
+          fullName: `${createdData.firstName || payload.firstName} ${createdData.lastName || payload.lastName}`.trim(),
+          mobile: createdData.mobile || payload.mobile,
+          email: createdData.email || payload.email,
+          status: statusLabel,
+          source: sourceLabel,
+          sourceType: createdData.sourceType ?? payload.sourceType,
+        },
+        { silent: true }
+      );
 
-    reset();
-    setIsCreateEnquiryOpen(false);
+      toast.success(resData?.message || "Enquiry created successfully", {
+        description: `${payload.firstName} ${payload.lastName} (${createdData.enquiryNumber || "EQ-Created"}) enrolled into ${activeFunnel?.name || "Active Funnel"}.`,
+      });
+
+      reset();
+      setIsCreateEnquiryOpen(false);
+    } catch (error: any) {
+      if (axios.isAxiosError(error) && error.response) {
+        // Backend returned HTTP 4xx/5xx (e.g. 400 Bad Request with duplicate mobile)
+        const resData = error.response.data;
+        let errorMsg = "Failed to create enquiry";
+        if (resData) {
+          if (typeof resData.detail === "string") {
+            errorMsg = resData.detail;
+          } else if (Array.isArray(resData.detail)) {
+            errorMsg = resData.detail.map((e: any) => e.msg || e.message).join(", ");
+          } else if (resData.message) {
+            errorMsg = resData.message;
+          }
+        }
+        toast.error(errorMsg);
+      } else {
+        // Network error / server offline (e.g. backend port 8000 not running)
+        console.warn("Backend API request failed or server offline, saving to local state:", error);
+        const statusLabel = STATUS_OPTIONS[payload.status] || "New";
+        const sourceLabel = SOURCE_TYPE_OPTIONS[payload.sourceType] || "Website";
+
+        addEnquiry(
+          {
+            firstName: payload.firstName,
+            lastName: payload.lastName,
+            fullName: `${payload.firstName} ${payload.lastName}`.trim(),
+            mobile: payload.mobile,
+            email: payload.email,
+            status: statusLabel,
+            source: sourceLabel,
+            sourceType: payload.sourceType,
+          },
+          { silent: true }
+        );
+
+        toast.warning("Server offline (http://localhost:8000). Saved to local state.", {
+          description: `${payload.firstName} ${payload.lastName} enrolled into ${activeFunnel?.name || "Active Funnel"}.`,
+        });
+
+        reset();
+        setIsCreateEnquiryOpen(false);
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -252,10 +313,11 @@ export function CreateEnquiryModal() {
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="rounded-xl bg-brand-600 hover:bg-brand-700 px-4 py-2 text-xs font-semibold text-white shadow-xs transition-colors"
+              disabled={isSubmitting || isLoading}
+              className="flex items-center gap-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:opacity-60 px-4 py-2 text-xs font-semibold text-white shadow-xs transition-colors cursor-pointer disabled:cursor-not-allowed"
             >
-              Create Enquiry
+              {(isSubmitting || isLoading) && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              <span>{isLoading ? "Creating..." : "Create Enquiry"}</span>
             </button>
           </div>
         </form>

@@ -14,11 +14,11 @@ router = APIRouter()
 logger.info("Crawl router loaded")
 
 
-@router.get("/")
-def read_root():
-    return {"Hello": "World"}
+# @router.get("/")
+# def read_root():
+#     return {"Hello": "World"}
 
-@router.get("/crawl", 
+@router.get("/", 
     response_model = SendResponse, 
     name = "branch:get-branches")
 async def get_branches(
