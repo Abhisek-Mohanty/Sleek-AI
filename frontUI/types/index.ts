@@ -47,7 +47,7 @@ export interface Enquiry {
   city?: string;
   company?: string;
   source: LeadSource;
-  sourceType?: LeadSource | string;
+  sourceType?: LeadSource | string | number;
   dateCreated: string;
   assignedRepId: string;
   assignedRepName: string;

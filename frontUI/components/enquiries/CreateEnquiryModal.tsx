@@ -9,54 +9,44 @@ import { useApp } from "@/context/AppContext";
 import { LeadSource, EnquiryStatus } from "@/types";
 import { toast } from "sonner";
 
-const STATUS_OPTIONS: EnquiryStatus[] = [
-  "New",
-  "Contacted",
-  "In Progress",
-  "Qualified",
-  "Proposal",
-  "Converted",
-  "Lost",
-];
+export const SOURCE_TYPE_OPTIONS: any = {
+  1: "Website",
+  2: "LinkedIn",
+  3: "Referral",
+  4: "Inbound Call",
+  5: "Google Ads",
+  6: "Partner",
+  7: "Exhibition",
+  8: "Direct",
+};
 
-const SOURCE_TYPE_OPTIONS: LeadSource[] = [
-  "Website",
-  "LinkedIn",
-  "Referral",
-  "Inbound Call",
-  "Google Ads",
-  "Partner",
-  "Exhibition",
-  "Direct",
-];
+export const STATUS_OPTIONS: any = {
+  1: "New",
+  2: "Contacted",
+  3: "In Progress",
+  4: "Qualified",
+  5: "Proposal",
+  6: "Converted",
+  7: "Lost",
+};
 
 const enquirySchema = z.object({
   firstName: z.string().trim().min(1, "First name is required"),
   lastName: z.string().trim().min(1, "Last name is required"),
   mobile: z.string().trim().min(6, "Please enter a valid mobile number"),
   email: z.string().trim().email("Please enter a valid email address"),
-  status: z.enum([
-    "New",
-    "Contacted",
-    "In Progress",
-    "Qualified",
-    "Proposal",
-    "Converted",
-    "Lost",
-  ] as const),
-  sourceType: z.enum([
-    "Website",
-    "LinkedIn",
-    "Referral",
-    "Inbound Call",
-    "Google Ads",
-    "Partner",
-    "Exhibition",
-    "Direct",
-  ] as const),
+  status: z.coerce.number().default(1),
+  sourceType: z.coerce.number().default(1),
 });
 
-export type CreateEnquiryPayload = z.infer<typeof enquirySchema>;
+export type CreateEnquiryPayload = {
+  firstName: string;
+  lastName: string;
+  mobile: string;
+  email: string;
+  status: number;
+  sourceType: number;
+};
 
 export function CreateEnquiryModal() {
   const { isCreateEnquiryOpen, setIsCreateEnquiryOpen, addEnquiry, activeFunnel } = useApp();
@@ -66,33 +56,36 @@ export function CreateEnquiryModal() {
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<CreateEnquiryPayload>({
+  } = useForm<z.infer<typeof enquirySchema>>({
     resolver: zodResolver(enquirySchema),
     defaultValues: {
       firstName: "",
       lastName: "",
       mobile: "",
       email: "",
-      status: "New",
-      sourceType: "Website",
+      status: 1,
+      sourceType: 1,
     },
   });
 
   if (!isCreateEnquiryOpen) return null;
 
-  const onSubmit = (data: CreateEnquiryPayload) => {
-    // Construct the explicit payload requested
+  const onSubmit = (data: z.infer<typeof enquirySchema>) => {
+    // Construct the explicit payload requested with numeric status and sourceType
     const payload: CreateEnquiryPayload = {
       firstName: data.firstName.trim(),
       lastName: data.lastName.trim(),
       mobile: data.mobile.trim(),
       email: data.email.trim(),
-      status: data.status,
-      sourceType: data.sourceType,
+      status: Number(data.status),
+      sourceType: Number(data.sourceType),
     };
 
     // Log the created payload to the console
     console.log("Created Enquiry Payload:", payload);
+
+    const statusLabel = STATUS_OPTIONS[payload.status] || "New";
+    const sourceLabel = SOURCE_TYPE_OPTIONS[payload.sourceType] || "Website";
 
     // Save and enroll enquiry into the application state
     addEnquiry({
@@ -101,13 +94,13 @@ export function CreateEnquiryModal() {
       fullName: `${payload.firstName} ${payload.lastName}`.trim(),
       mobile: payload.mobile,
       email: payload.email,
-      status: payload.status,
-      source: payload.sourceType,
+      status: statusLabel,
+      source: sourceLabel,
       sourceType: payload.sourceType,
     });
 
     toast.success("Enquiry created successfully", {
-      description: `${payload.firstName} ${payload.lastName} (${payload.status}) enrolled into ${activeFunnel?.name || "Active Funnel"}.`,
+      description: `${payload.firstName} ${payload.lastName} (Status: ${statusLabel}, Source: ${sourceLabel}) enrolled into ${activeFunnel?.name || "Active Funnel"}.`,
     });
 
     reset();
@@ -210,9 +203,9 @@ export function CreateEnquiryModal() {
                 {...register("status")}
                 className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 bg-white focus:border-brand-500 focus:outline-hidden"
               >
-                {STATUS_OPTIONS.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
+                {Object.entries(STATUS_OPTIONS).map(([key, label]) => (
+                  <option key={key} value={key}>
+                    {label as string}
                   </option>
                 ))}
               </select>
@@ -230,9 +223,9 @@ export function CreateEnquiryModal() {
                 {...register("sourceType")}
                 className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 bg-white focus:border-brand-500 focus:outline-hidden"
               >
-                {SOURCE_TYPE_OPTIONS.map((source) => (
-                  <option key={source} value={source}>
-                    {source}
+                {Object.entries(SOURCE_TYPE_OPTIONS).map(([key, label]) => (
+                  <option key={key} value={key}>
+                    {label as string}
                   </option>
                 ))}
               </select>

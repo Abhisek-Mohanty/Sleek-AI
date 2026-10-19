@@ -16,6 +16,7 @@ import {
 import { useApp } from "@/context/AppContext";
 import { Enquiry, LeadSource, EnquiryStatus } from "@/types";
 import { toast } from "sonner";
+import { SOURCE_TYPE_OPTIONS, STATUS_OPTIONS } from "./CreateEnquiryModal";
 
 interface ColumnMapping {
   firstNameCol: string;
@@ -194,8 +195,10 @@ export function ImportEnquiriesModal() {
 
       const mobile = mobileIdx >= 0 ? String(r[mobileIdx] || "").trim() : "";
       const email = emailIdx >= 0 ? String(r[emailIdx] || "").trim() : "";
-      const status = statusIdx >= 0 && r[statusIdx] ? String(r[statusIdx]).trim() : "New";
-      const sourceType = sourceTypeIdx >= 0 && r[sourceTypeIdx] ? String(r[sourceTypeIdx]).trim() : "Website";
+      const rawStatus = statusIdx >= 0 && r[statusIdx] ? String(r[statusIdx]).trim() : "New";
+      const rawSource = sourceTypeIdx >= 0 && r[sourceTypeIdx] ? String(r[sourceTypeIdx]).trim() : "Website";
+      const status = STATUS_OPTIONS[rawStatus] || rawStatus || "New";
+      const sourceType = SOURCE_TYPE_OPTIONS[rawSource] || rawSource || "Website";
 
       const hasRequired = Boolean(rawFirst && mobile && email);
       const isDuplicate = enquiries.some(

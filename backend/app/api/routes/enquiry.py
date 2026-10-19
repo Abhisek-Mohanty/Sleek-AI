@@ -7,7 +7,7 @@ from app.api.dependencies.database import get_repository
 from app.core import config
 from loguru import logger
 from app.resources.helper.common import *
-from backend.app.db.repositories.enquiry import EnquiryRepository
+from app.db.repositories.enquiry import EnquiryRepository
 
 router = APIRouter()
 
@@ -52,7 +52,7 @@ async def get_branches(
         data = oResult
     ).send()
 
-@router.post("/enquirymis", 
+@router.post("/create", 
     response_model = SendResponse, 
     name = "enquiry:dailymis-enquiry")
 async def dailymis(
