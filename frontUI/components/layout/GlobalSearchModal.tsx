@@ -52,7 +52,7 @@ export function GlobalSearchModal() {
       (e) =>
         e.fullName.toLowerCase().includes(query.toLowerCase()) ||
         e.email.toLowerCase().includes(query.toLowerCase()) ||
-        e.city.toLowerCase().includes(query.toLowerCase()) ||
+        (e.city && e.city.toLowerCase().includes(query.toLowerCase())) ||
         (e.company && e.company.toLowerCase().includes(query.toLowerCase()))
     )
     .slice(0, 5);
@@ -201,7 +201,7 @@ export function GlobalSearchModal() {
                           )}
                         </div>
                         <span className="text-[11px] text-slate-600">
-                          {enq.city} · {enq.currentStageName}
+                          {enq.city ? `${enq.city} · ` : ""}{enq.currentStageName}
                         </span>
                       </div>
                     </div>

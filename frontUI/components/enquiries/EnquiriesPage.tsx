@@ -61,10 +61,12 @@ export function EnquiriesPage() {
     return enquiries
       .filter((e) => {
         const matchesSearch =
-          e.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          e.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          e.mobile.includes(searchTerm) ||
-          e.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (e.fullName && e.fullName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (e.firstName && e.firstName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (e.lastName && e.lastName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (e.email && e.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (e.mobile && e.mobile.includes(searchTerm)) ||
+          (e.city && e.city.toLowerCase().includes(searchTerm.toLowerCase())) ||
           (e.company && e.company.toLowerCase().includes(searchTerm.toLowerCase()));
 
         const matchesStatus = statusFilter === "All" || e.status === statusFilter;
@@ -453,7 +455,7 @@ export function EnquiriesPage() {
                       <td className="py-3 px-4">
                         <div className="font-semibold text-slate-900">{enq.fullName}</div>
                         <div className="text-[11px] text-slate-600">
-                          {enq.company || "Independent"} · {enq.city}
+                          {enq.company || "Independent"}{enq.city ? ` · ${enq.city}` : ""}
                         </div>
                       </td>
                       <td className="py-3 px-4 text-slate-700">

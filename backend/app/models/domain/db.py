@@ -1,4 +1,3 @@
-from re import A
-from app.models.domain.crawl import Crawl
+from app.models.domain.enquiry import Enquiry
 
-Crawl = Crawl
+Enquiry = Enquiry

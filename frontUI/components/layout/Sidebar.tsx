@@ -89,7 +89,7 @@ export function Sidebar() {
             </div>
             <div className="flex flex-col">
               <div className="flex items-center gap-1.5">
-                <span className="font-bold text-slate-900 tracking-tight text-lg">sleek</span>
+                <span className="font-bold text-slate-900 tracking-tight text-lg">Sleek</span>
                 <span className="text-xs font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-brand-50 text-brand-700 border border-brand-200/60">
                   AI
                 </span>

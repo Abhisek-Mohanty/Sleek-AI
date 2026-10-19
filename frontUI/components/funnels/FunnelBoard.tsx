@@ -48,7 +48,7 @@ export function FunnelBoard() {
     (e) =>
       (!e.currentFunnelId || e.currentFunnelId === activeFunnel.id) &&
       (e.fullName.toLowerCase().includes(filterQuery.toLowerCase()) ||
-        e.city.toLowerCase().includes(filterQuery.toLowerCase()) ||
+        (e.city && e.city.toLowerCase().includes(filterQuery.toLowerCase())) ||
         (e.company && e.company.toLowerCase().includes(filterQuery.toLowerCase())))
   );
 
@@ -179,7 +179,7 @@ export function FunnelBoard() {
                             </h4>
                             <p className="text-[11px] text-slate-600 flex items-center gap-1 mt-0.5">
                               <Building2 className="h-3 w-3" />
-                              {lead.company || lead.city}
+                              {lead.company || lead.city || "Independent"}
                             </p>
                           </div>
                           <span
@@ -198,7 +198,7 @@ export function FunnelBoard() {
                         <div className="mt-2 flex items-center justify-between text-[11px] text-slate-600">
                           <span className="flex items-center gap-1">
                             <MapPin className="h-3 w-3 text-slate-600" />
-                            {lead.city}
+                            {lead.city || lead.source}
                           </span>
                           <span className="font-semibold text-slate-900">
                             {formatCurrency(lead.estimatedValue || 25000)}

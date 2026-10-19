@@ -38,12 +38,16 @@ export interface ActivityHistoryItem {
 
 export interface Enquiry {
   id: string;
+  enquiryNumber?: string;
+  firstName?: string;
+  lastName?: string;
   fullName: string;
   mobile: string;
   email: string;
-  city: string;
+  city?: string;
   company?: string;
   source: LeadSource;
+  sourceType?: LeadSource | string;
   dateCreated: string;
   assignedRepId: string;
   assignedRepName: string;

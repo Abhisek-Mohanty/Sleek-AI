@@ -14,16 +14,16 @@ import {
   FileText,
 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
-import { Enquiry } from "@/types";
+import { Enquiry, LeadSource, EnquiryStatus } from "@/types";
 import { toast } from "sonner";
 
 interface ColumnMapping {
-  nameCol: string;
+  firstNameCol: string;
+  lastNameCol: string;
   mobileCol: string;
   emailCol: string;
-  cityCol: string;
-  companyCol: string;
-  sourceCol: string;
+  statusCol: string;
+  sourceTypeCol: string;
 }
 
 export function ImportEnquiriesModal() {
@@ -34,12 +34,12 @@ export function ImportEnquiriesModal() {
   const [rawHeaders, setRawHeaders] = useState<string[]>([]);
   const [rawRows, setRawRows] = useState<any[]>([]);
   const [mapping, setMapping] = useState<ColumnMapping>({
-    nameCol: "",
+    firstNameCol: "",
+    lastNameCol: "",
     mobileCol: "",
     emailCol: "",
-    cityCol: "",
-    companyCol: "",
-    sourceCol: "",
+    statusCol: "",
+    sourceTypeCol: "",
   });
 
   const [isDragging, setIsDragging] = useState(false);
@@ -50,40 +50,44 @@ export function ImportEnquiriesModal() {
   const handleDownloadSample = () => {
     const sampleData = [
       {
-        "Full Name": "Devon Vance",
-        "Mobile Number": "+1 (415) 399-2810",
+        "First Name": "Devon",
+        "Last Name": "Vance",
+        "Mobile": "+1 (415) 399-2810",
         "Email": "devon.vance@solardrive.io",
-        "City": "San Francisco",
-        "Company": "SolarDrive Systems",
-        "Source": "Website",
-        "Estimated Value": 45000,
+        "Status": "New",
+        "Source Type": "Website",
       },
       {
-        "Full Name": "Alisha Verma",
-        "Mobile Number": "+91 98201 44556",
+        "First Name": "Alisha",
+        "Last Name": "Verma",
+        "Mobile": "+91 98201 44556",
         "Email": "alisha@apexfin.com",
-        "City": "Mumbai",
-        "Company": "Apex Financial",
-        "Source": "LinkedIn",
-        "Estimated Value": 60000,
+        "Status": "Contacted",
+        "Source Type": "LinkedIn",
       },
       {
-        "Full Name": "Liam Thorne",
-        "Mobile Number": "+44 20 7123 4567",
+        "First Name": "Liam",
+        "Last Name": "Thorne",
+        "Mobile": "+44 20 7123 4567",
         "Email": "liam.t@cloudmesh.co.uk",
-        "City": "London",
-        "Company": "CloudMesh UK",
-        "Source": "Referral",
-        "Estimated Value": 35000,
+        "Status": "Qualified",
+        "Source Type": "Referral",
       },
       {
-        "Full Name": "Missing Email Lead",
-        "Mobile Number": "+1 (555) 000-1111",
+        "First Name": "Elena",
+        "Last Name": "Rostova",
+        "Mobile": "+1 (555) 789-0123",
+        "Email": "elena.r@fintechpulse.com",
+        "Status": "In Progress",
+        "Source Type": "Google Ads",
+      },
+      {
+        "First Name": "Missing Email",
+        "Last Name": "Lead",
+        "Mobile": "+1 (555) 000-1111",
         "Email": "",
-        "City": "Chicago",
-        "Company": "NoEmail Corp",
-        "Source": "Partner",
-        "Estimated Value": 20000,
+        "Status": "New",
+        "Source Type": "Partner",
       },
     ];
 
@@ -117,14 +121,30 @@ export function ImportEnquiriesModal() {
         setRawHeaders(headers);
         setRawRows(rows);
 
-        // Auto-detect columns intelligently
+        // Auto-detect columns intelligently based on the 6 requested fields
         const autoMap: ColumnMapping = {
-          nameCol: headers.find((h) => /name|full/i.test(h)) || headers[0] || "",
-          mobileCol: headers.find((h) => /mobile|phone|contact/i.test(h)) || headers[1] || "",
-          emailCol: headers.find((h) => /email|mail/i.test(h)) || headers[2] || "",
-          cityCol: headers.find((h) => /city|location|address/i.test(h)) || headers[3] || "",
-          companyCol: headers.find((h) => /company|org|business/i.test(h)) || "",
-          sourceCol: headers.find((h) => /source|channel/i.test(h)) || "",
+          firstNameCol:
+            headers.find((h) => /first.*name|^fname$|given.*name/i.test(h)) ||
+            headers.find((h) => /^name$|full.*name/i.test(h)) ||
+            headers[0] ||
+            "",
+          lastNameCol:
+            headers.find((h) => /last.*name|^lname$|surname|family.*name/i.test(h)) ||
+            (headers.length > 1 && !/first.*name/i.test(headers[0]) ? "" : headers[1]) ||
+            "",
+          mobileCol:
+            headers.find((h) => /mobile|phone|contact|tel|cell/i.test(h)) ||
+            headers.find((h) => /number/i.test(h)) ||
+            "",
+          emailCol:
+            headers.find((h) => /email|mail/i.test(h)) ||
+            "",
+          statusCol:
+            headers.find((h) => /^status$|state|stage/i.test(h)) ||
+            "",
+          sourceTypeCol:
+            headers.find((h) => /source.*type|^source$|channel|lead.*source/i.test(h)) ||
+            "",
         };
 
         setMapping(autoMap);
@@ -152,45 +172,53 @@ export function ImportEnquiriesModal() {
     }
   };
 
-  // Build mapped objects
+  // Build mapped objects using the 6 fields
   const getMappedRows = () => {
-    const nameIdx = rawHeaders.indexOf(mapping.nameCol);
+    const firstNameIdx = rawHeaders.indexOf(mapping.firstNameCol);
+    const lastNameIdx = rawHeaders.indexOf(mapping.lastNameCol);
     const mobileIdx = rawHeaders.indexOf(mapping.mobileCol);
     const emailIdx = rawHeaders.indexOf(mapping.emailCol);
-    const cityIdx = rawHeaders.indexOf(mapping.cityCol);
-    const companyIdx = rawHeaders.indexOf(mapping.companyCol);
-    const sourceIdx = rawHeaders.indexOf(mapping.sourceCol);
+    const statusIdx = rawHeaders.indexOf(mapping.statusCol);
+    const sourceTypeIdx = rawHeaders.indexOf(mapping.sourceTypeCol);
 
     return rawRows.map((r, i) => {
-      const name = nameIdx >= 0 ? String(r[nameIdx] || "").trim() : "";
+      let rawFirst = firstNameIdx >= 0 ? String(r[firstNameIdx] || "").trim() : "";
+      let rawLast = lastNameIdx >= 0 ? String(r[lastNameIdx] || "").trim() : "";
+
+      // If user mapped a single Full Name column to firstNameCol and left lastNameCol empty
+      if (rawFirst && !rawLast && rawFirst.includes(" ")) {
+        const parts = rawFirst.split(" ");
+        rawFirst = parts[0];
+        rawLast = parts.slice(1).join(" ");
+      }
+
       const mobile = mobileIdx >= 0 ? String(r[mobileIdx] || "").trim() : "";
       const email = emailIdx >= 0 ? String(r[emailIdx] || "").trim() : "";
-      const city = cityIdx >= 0 ? String(r[cityIdx] || "").trim() : "";
-      const company = companyIdx >= 0 ? String(r[companyIdx] || "").trim() : "";
-      const source = sourceIdx >= 0 ? String(r[sourceIdx] || "").trim() : "Website";
+      const status = statusIdx >= 0 && r[statusIdx] ? String(r[statusIdx]).trim() : "New";
+      const sourceType = sourceTypeIdx >= 0 && r[sourceTypeIdx] ? String(r[sourceTypeIdx]).trim() : "Website";
 
-      const hasRequired = Boolean(name && mobile && email && city);
+      const hasRequired = Boolean(rawFirst && mobile && email);
       const isDuplicate = enquiries.some(
         (existing) =>
-          existing.email.toLowerCase() === email.toLowerCase() ||
-          existing.mobile === mobile
+          (email && existing.email.toLowerCase() === email.toLowerCase()) ||
+          (mobile && existing.mobile === mobile)
       );
 
       return {
         rowIndex: i + 1,
-        fullName: name,
+        firstName: rawFirst,
+        lastName: rawLast,
+        fullName: [rawFirst, rawLast].filter(Boolean).join(" "),
         mobile,
         email,
-        city,
-        company,
-        source: source || "Website",
+        status,
+        sourceType,
         isValid: hasRequired,
         isDuplicate,
         missingFields: [
-          !name && "Name",
+          !rawFirst && "First Name",
           !mobile && "Mobile",
           !email && "Email",
-          !city && "City",
         ].filter(Boolean),
       };
     });
@@ -207,17 +235,25 @@ export function ImportEnquiriesModal() {
       return;
     }
 
+    // Construct the payload for imported records
     const payload: Partial<Enquiry>[] = validRecords.map((r) => ({
-      fullName: r.fullName,
+      firstName: r.firstName,
+      lastName: r.lastName,
+      fullName: r.fullName || `${r.firstName} ${r.lastName}`.trim(),
       mobile: r.mobile,
       email: r.email,
-      city: r.city,
-      company: r.company || "Independent",
-      source: (r.source as any) || "Website",
+      status: (r.status as EnquiryStatus) || "New",
+      sourceType: (r.sourceType as LeadSource) || "Website",
+      source: (r.sourceType as LeadSource) || "Website",
       priority: "Medium",
     }));
 
-    importEnquiries(payload);
+    console.log("Import CSV Enquiries Payload:", payload);
+
+    const count = importEnquiries(payload);
+    toast.success("Enquiries imported successfully", {
+      description: `Successfully imported ${count} leads into the active pipeline.`,
+    });
     setIsImportOpen(false);
   };
 
@@ -233,13 +269,13 @@ export function ImportEnquiriesModal() {
             <div>
               <h2 className="text-base font-bold text-slate-900">Import Enquiries</h2>
               <p className="text-xs text-slate-600">
-                Support for CSV and Excel files (.csv, .xlsx, .xls)
+                Upload CSV or Excel files with lead contact information
               </p>
             </div>
           </div>
           <button
             onClick={() => setIsImportOpen(false)}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100"
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
           >
             <X className="h-4 w-4" />
           </button>
@@ -319,7 +355,7 @@ export function ImportEnquiriesModal() {
             <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-slate-600" />
-                <span className="text-xs text-slate-700">Need a pre-formatted template?</span>
+                <span className="text-xs text-slate-700">Need a sample CSV with the 6 fields?</span>
               </div>
               <button
                 type="button"
@@ -352,14 +388,15 @@ export function ImportEnquiriesModal() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* 1. First Name */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Lead Name <span className="text-rose-500">*</span>
+                  First Name <span className="text-rose-500">*</span>
                 </label>
                 <select
-                  value={mapping.nameCol}
-                  onChange={(e) => setMapping({ ...mapping, nameCol: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900"
+                  value={mapping.firstNameCol}
+                  onChange={(e) => setMapping({ ...mapping, firstNameCol: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 bg-white"
                 >
                   <option value="">-- Select Column --</option>
                   {rawHeaders.map((h) => (
@@ -368,6 +405,24 @@ export function ImportEnquiriesModal() {
                 </select>
               </div>
 
+              {/* 2. Last Name */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Last Name (Optional)
+                </label>
+                <select
+                  value={mapping.lastNameCol}
+                  onChange={(e) => setMapping({ ...mapping, lastNameCol: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 bg-white"
+                >
+                  <option value="">-- Auto-split from First Name / None --</option>
+                  {rawHeaders.map((h) => (
+                    <option key={h} value={h}>{h}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 3. Mobile */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Mobile Number <span className="text-rose-500">*</span>
@@ -375,7 +430,7 @@ export function ImportEnquiriesModal() {
                 <select
                   value={mapping.mobileCol}
                   onChange={(e) => setMapping({ ...mapping, mobileCol: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900"
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 bg-white"
                 >
                   <option value="">-- Select Column --</option>
                   {rawHeaders.map((h) => (
@@ -384,6 +439,7 @@ export function ImportEnquiriesModal() {
                 </select>
               </div>
 
+              {/* 4. Email */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Email Address <span className="text-rose-500">*</span>
@@ -391,7 +447,7 @@ export function ImportEnquiriesModal() {
                 <select
                   value={mapping.emailCol}
                   onChange={(e) => setMapping({ ...mapping, emailCol: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900"
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 bg-white"
                 >
                   <option value="">-- Select Column --</option>
                   {rawHeaders.map((h) => (
@@ -400,48 +456,34 @@ export function ImportEnquiriesModal() {
                 </select>
               </div>
 
+              {/* 5. Status */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  City / Location <span className="text-rose-500">*</span>
+                  Status (Optional)
                 </label>
                 <select
-                  value={mapping.cityCol}
-                  onChange={(e) => setMapping({ ...mapping, cityCol: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900"
+                  value={mapping.statusCol}
+                  onChange={(e) => setMapping({ ...mapping, statusCol: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 bg-white"
                 >
-                  <option value="">-- Select Column --</option>
+                  <option value="">-- Default to "New" --</option>
                   {rawHeaders.map((h) => (
                     <option key={h} value={h}>{h}</option>
                   ))}
                 </select>
               </div>
 
+              {/* 6. Source Type */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Company Name (Optional)
+                  Source Type (Optional)
                 </label>
                 <select
-                  value={mapping.companyCol}
-                  onChange={(e) => setMapping({ ...mapping, companyCol: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900"
+                  value={mapping.sourceTypeCol}
+                  onChange={(e) => setMapping({ ...mapping, sourceTypeCol: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 bg-white"
                 >
-                  <option value="">-- Skip / None --</option>
-                  {rawHeaders.map((h) => (
-                    <option key={h} value={h}>{h}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Lead Source (Optional)
-                </label>
-                <select
-                  value={mapping.sourceCol}
-                  onChange={(e) => setMapping({ ...mapping, sourceCol: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900"
-                >
-                  <option value="">-- Skip / Default to Website --</option>
+                  <option value="">-- Default to "Website" --</option>
                   {rawHeaders.map((h) => (
                     <option key={h} value={h}>{h}</option>
                   ))}
@@ -452,19 +494,19 @@ export function ImportEnquiriesModal() {
             <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
               <button
                 onClick={() => setStep("upload")}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700"
+                className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
               >
                 Back
               </button>
               <button
                 onClick={() => {
-                  if (!mapping.nameCol || !mapping.mobileCol || !mapping.emailCol || !mapping.cityCol) {
-                    toast.error("Please map all 4 required fields: Name, Mobile, Email, and City.");
+                  if (!mapping.firstNameCol || !mapping.mobileCol || !mapping.emailCol) {
+                    toast.error("Please map the required fields: First Name, Mobile, and Email.");
                     return;
                   }
                   setStep("preview");
                 }}
-                className="rounded-xl bg-brand-600 hover:bg-brand-700 px-4 py-2 text-xs font-semibold text-white shadow-xs"
+                className="rounded-xl bg-brand-600 hover:bg-brand-700 px-4 py-2 text-xs font-semibold text-white shadow-xs transition-colors"
               >
                 Continue to Preview
               </button>
@@ -501,21 +543,33 @@ export function ImportEnquiriesModal() {
                   <thead className="bg-slate-50 text-slate-600 sticky top-0 border-b border-slate-200">
                     <tr>
                       <th className="py-2 px-3">#</th>
-                      <th className="py-2 px-3">Name</th>
+                      <th className="py-2 px-3">First Name</th>
+                      <th className="py-2 px-3">Last Name</th>
                       <th className="py-2 px-3">Mobile</th>
                       <th className="py-2 px-3">Email</th>
-                      <th className="py-2 px-3">Location</th>
                       <th className="py-2 px-3">Status</th>
+                      <th className="py-2 px-3">Source Type</th>
+                      <th className="py-2 px-3">Validation</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {mappedData.slice(0, 15).map((row) => (
                       <tr key={row.rowIndex} className="hover:bg-slate-50/70">
                         <td className="py-2 px-3 text-slate-600">{row.rowIndex}</td>
-                        <td className="py-2 px-3 font-semibold text-slate-900">{row.fullName || "—"}</td>
+                        <td className="py-2 px-3 font-semibold text-slate-900">{row.firstName || "—"}</td>
+                        <td className="py-2 px-3 text-slate-700">{row.lastName || "—"}</td>
                         <td className="py-2 px-3 text-slate-600">{row.mobile || "—"}</td>
                         <td className="py-2 px-3 text-slate-600">{row.email || "—"}</td>
-                        <td className="py-2 px-3 text-slate-600">{row.city || "—"}</td>
+                        <td className="py-2 px-3">
+                          <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[10px] font-semibold">
+                            {row.status || "New"}
+                          </span>
+                        </td>
+                        <td className="py-2 px-3">
+                          <span className="px-2 py-0.5 rounded-md bg-brand-50 text-brand-700 text-[10px] font-semibold">
+                            {row.sourceType || "Website"}
+                          </span>
+                        </td>
                         <td className="py-2 px-3">
                           {row.isDuplicate ? (
                             <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold">
@@ -526,7 +580,10 @@ export function ImportEnquiriesModal() {
                               Valid
                             </span>
                           ) : (
-                            <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[10px] font-bold" title={`Missing: ${row.missingFields.join(", ")}`}>
+                            <span
+                              className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[10px] font-bold"
+                              title={`Missing: ${row.missingFields.join(", ")}`}
+                            >
                               Missing {row.missingFields.join(", ")}
                             </span>
                           )}
@@ -542,7 +599,7 @@ export function ImportEnquiriesModal() {
             <div className="flex items-center justify-between pt-3 border-t border-slate-100">
               <button
                 onClick={() => setStep("map")}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700"
+                className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
               >
                 Back to Mapping
               </button>

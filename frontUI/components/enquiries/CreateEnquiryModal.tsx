@@ -6,15 +6,45 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { X, Sparkles, UserPlus } from "lucide-react";
 import { useApp } from "@/context/AppContext";
-import { LeadSource, PriorityLevel } from "@/types";
+import { LeadSource, EnquiryStatus } from "@/types";
+import { toast } from "sonner";
+
+const STATUS_OPTIONS: EnquiryStatus[] = [
+  "New",
+  "Contacted",
+  "In Progress",
+  "Qualified",
+  "Proposal",
+  "Converted",
+  "Lost",
+];
+
+const SOURCE_TYPE_OPTIONS: LeadSource[] = [
+  "Website",
+  "LinkedIn",
+  "Referral",
+  "Inbound Call",
+  "Google Ads",
+  "Partner",
+  "Exhibition",
+  "Direct",
+];
 
 const enquirySchema = z.object({
-  fullName: z.string().min(2, "Full name must be at least 2 characters"),
-  email: z.string().email("Please enter a valid email address"),
-  mobile: z.string().min(8, "Please enter a valid phone or mobile number"),
-  city: z.string().min(2, "Location / City is required"),
-  company: z.string().optional(),
-  source: z.enum([
+  firstName: z.string().trim().min(1, "First name is required"),
+  lastName: z.string().trim().min(1, "Last name is required"),
+  mobile: z.string().trim().min(6, "Please enter a valid mobile number"),
+  email: z.string().trim().email("Please enter a valid email address"),
+  status: z.enum([
+    "New",
+    "Contacted",
+    "In Progress",
+    "Qualified",
+    "Proposal",
+    "Converted",
+    "Lost",
+  ] as const),
+  sourceType: z.enum([
     "Website",
     "LinkedIn",
     "Referral",
@@ -24,12 +54,9 @@ const enquirySchema = z.object({
     "Exhibition",
     "Direct",
   ] as const),
-  priority: z.enum(["High", "Medium", "Low"] as const),
-  estimatedValue: z.coerce.number().min(0, "Value must be positive").default(25000),
-  notes: z.string().optional(),
 });
 
-type EnquiryFormData = z.infer<typeof enquirySchema>;
+export type CreateEnquiryPayload = z.infer<typeof enquirySchema>;
 
 export function CreateEnquiryModal() {
   const { isCreateEnquiryOpen, setIsCreateEnquiryOpen, addEnquiry, activeFunnel } = useApp();
@@ -39,44 +66,50 @@ export function CreateEnquiryModal() {
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<EnquiryFormData>({
+  } = useForm<CreateEnquiryPayload>({
     resolver: zodResolver(enquirySchema),
     defaultValues: {
-      fullName: "",
-      email: "",
+      firstName: "",
+      lastName: "",
       mobile: "",
-      city: "San Francisco",
-      company: "",
-      source: "Website",
-      priority: "Medium",
-      estimatedValue: 25000,
-      notes: "",
+      email: "",
+      status: "New",
+      sourceType: "Website",
     },
   });
 
   if (!isCreateEnquiryOpen) return null;
 
-  const onSubmit = (data: EnquiryFormData) => {
+  const onSubmit = (data: CreateEnquiryPayload) => {
+    // Construct the explicit payload requested
+    const payload: CreateEnquiryPayload = {
+      firstName: data.firstName.trim(),
+      lastName: data.lastName.trim(),
+      mobile: data.mobile.trim(),
+      email: data.email.trim(),
+      status: data.status,
+      sourceType: data.sourceType,
+    };
+
+    // Log the created payload to the console
+    console.log("Created Enquiry Payload:", payload);
+
+    // Save and enroll enquiry into the application state
     addEnquiry({
-      fullName: data.fullName,
-      email: data.email,
-      mobile: data.mobile,
-      city: data.city,
-      company: data.company,
-      source: data.source as LeadSource,
-      priority: data.priority as PriorityLevel,
-      estimatedValue: data.estimatedValue,
-      notes: data.notes
-        ? [
-            {
-              id: `note_${Date.now()}`,
-              content: data.notes,
-              author: "Alex Morgan",
-              createdAt: new Date().toISOString(),
-            },
-          ]
-        : [],
+      firstName: payload.firstName,
+      lastName: payload.lastName,
+      fullName: `${payload.firstName} ${payload.lastName}`.trim(),
+      mobile: payload.mobile,
+      email: payload.email,
+      status: payload.status,
+      source: payload.sourceType,
+      sourceType: payload.sourceType,
     });
+
+    toast.success("Enquiry created successfully", {
+      description: `${payload.firstName} ${payload.lastName} (${payload.status}) enrolled into ${activeFunnel?.name || "Active Funnel"}.`,
+    });
+
     reset();
     setIsCreateEnquiryOpen(false);
   };
@@ -99,7 +132,7 @@ export function CreateEnquiryModal() {
           </div>
           <button
             onClick={() => setIsCreateEnquiryOpen(false)}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100"
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
           >
             <X className="h-4 w-4" />
           </button>
@@ -108,137 +141,105 @@ export function CreateEnquiryModal() {
         {/* Form Body */}
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Full Name */}
+            {/* 1. First Name */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Full Name <span className="text-rose-500">*</span>
+                First Name <span className="text-rose-500">*</span>
               </label>
               <input
-                {...register("fullName")}
-                placeholder="e.g. John Doe"
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 placeholder:text-slate-600 focus:border-brand-500 focus:outline-hidden"
+                {...register("firstName")}
+                placeholder="e.g. John"
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:outline-hidden"
               />
-              {errors.fullName && (
-                <p className="mt-1 text-[11px] text-rose-500">{errors.fullName.message}</p>
+              {errors.firstName && (
+                <p className="mt-1 text-[11px] text-rose-500">{errors.firstName.message}</p>
               )}
             </div>
 
-            {/* Email */}
+            {/* 2. Last Name */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Email Address <span className="text-rose-500">*</span>
+                Last Name <span className="text-rose-500">*</span>
               </label>
               <input
-                {...register("email")}
-                placeholder="john@company.com"
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 placeholder:text-slate-600 focus:border-brand-500 focus:outline-hidden"
+                {...register("lastName")}
+                placeholder="e.g. Doe"
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:outline-hidden"
               />
-              {errors.email && (
-                <p className="mt-1 text-[11px] text-rose-500">{errors.email.message}</p>
+              {errors.lastName && (
+                <p className="mt-1 text-[11px] text-rose-500">{errors.lastName.message}</p>
               )}
             </div>
 
-            {/* Mobile */}
+            {/* 3. Mobile */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Mobile / Phone <span className="text-rose-500">*</span>
+                Mobile <span className="text-rose-500">*</span>
               </label>
               <input
                 {...register("mobile")}
                 placeholder="+1 (555) 234-5678"
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 placeholder:text-slate-600 focus:border-brand-500 focus:outline-hidden"
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:outline-hidden"
               />
               {errors.mobile && (
                 <p className="mt-1 text-[11px] text-rose-500">{errors.mobile.message}</p>
               )}
             </div>
 
-            {/* City / Location */}
+            {/* 4. Email */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                City / Location <span className="text-rose-500">*</span>
+                Email <span className="text-rose-500">*</span>
               </label>
               <input
-                {...register("city")}
-                placeholder="e.g. Austin, TX"
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 placeholder:text-slate-600 focus:border-brand-500 focus:outline-hidden"
+                {...register("email")}
+                placeholder="john@example.com"
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:outline-hidden"
               />
-              {errors.city && (
-                <p className="mt-1 text-[11px] text-rose-500">{errors.city.message}</p>
+              {errors.email && (
+                <p className="mt-1 text-[11px] text-rose-500">{errors.email.message}</p>
               )}
             </div>
 
-            {/* Company Name */}
+            {/* 5. Status */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Company Name (Optional)
-              </label>
-              <input
-                {...register("company")}
-                placeholder="e.g. Acme Corp"
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 placeholder:text-slate-600 focus:border-brand-500 focus:outline-hidden"
-              />
-            </div>
-
-            {/* Source */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Enquiry Source <span className="text-rose-500">*</span>
+                Status <span className="text-rose-500">*</span>
               </label>
               <select
-                {...register("source")}
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-brand-500 focus:outline-hidden"
+                {...register("status")}
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 bg-white focus:border-brand-500 focus:outline-hidden"
               >
-                <option value="Website">Website</option>
-                <option value="LinkedIn">LinkedIn</option>
-                <option value="Referral">Referral</option>
-                <option value="Inbound Call">Inbound Call</option>
-                <option value="Google Ads">Google Ads</option>
-                <option value="Partner">Partner</option>
-                <option value="Exhibition">Exhibition</option>
-                <option value="Direct">Direct</option>
+                {STATUS_OPTIONS.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
               </select>
+              {errors.status && (
+                <p className="mt-1 text-[11px] text-rose-500">{errors.status.message}</p>
+              )}
             </div>
 
-            {/* Priority */}
+            {/* 6. Source Type */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Priority Level
+                Source Type <span className="text-rose-500">*</span>
               </label>
               <select
-                {...register("priority")}
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-brand-500 focus:outline-hidden"
+                {...register("sourceType")}
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 bg-white focus:border-brand-500 focus:outline-hidden"
               >
-                <option value="High">High Priority</option>
-                <option value="Medium">Medium Priority</option>
-                <option value="Low">Low Priority</option>
+                {SOURCE_TYPE_OPTIONS.map((source) => (
+                  <option key={source} value={source}>
+                    {source}
+                  </option>
+                ))}
               </select>
+              {errors.sourceType && (
+                <p className="mt-1 text-[11px] text-rose-500">{errors.sourceType.message}</p>
+              )}
             </div>
-
-            {/* Estimated Deal Value */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Estimated Value ($ USD)
-              </label>
-              <input
-                type="number"
-                {...register("estimatedValue")}
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-brand-500 focus:outline-hidden"
-              />
-            </div>
-          </div>
-
-          {/* Notes */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Initial Notes or Inbound Comments
-            </label>
-            <textarea
-              {...register("notes")}
-              rows={2}
-              placeholder="Key requirements, budget mentioned, timeline..."
-              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 placeholder:text-slate-600 focus:border-brand-500 focus:outline-hidden"
-            />
           </div>
 
           {/* AI Banner */}

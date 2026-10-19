@@ -78,7 +78,7 @@ export function EnquiryDetailModal({ enquiry, onClose }: EnquiryDetailModalProps
   const handleQuickFollowUp = () => {
     addActivity({
       enquiryId: enquiry.id,
-      enquiryName: `${enquiry.fullName} (${enquiry.company || enquiry.city})`,
+      enquiryName: `${enquiry.fullName} (${enquiry.company || enquiry.city || "Direct"})`,
       title: `Scheduled Follow-up with ${enquiry.fullName}`,
       type: "follow_up",
       dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
@@ -309,10 +309,12 @@ export function EnquiryDetailModal({ enquiry, onClose }: EnquiryDetailModalProps
                         <Phone className="h-3.5 w-3.5 text-slate-600 shrink-0" />
                         <span>{enquiry.mobile}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-slate-700">
-                        <MapPin className="h-3.5 w-3.5 text-slate-600 shrink-0" />
-                        <span>{enquiry.city}</span>
-                      </div>
+                      {enquiry.city && (
+                        <div className="flex items-center gap-2 text-slate-700">
+                          <MapPin className="h-3.5 w-3.5 text-slate-600 shrink-0" />
+                          <span>{enquiry.city}</span>
+                        </div>
+                      )}
                       <div className="flex items-center gap-2 text-slate-700">
                         <Building2 className="h-3.5 w-3.5 text-slate-600 shrink-0" />
                         <span>{enquiry.company || "Independent Account"}</span>

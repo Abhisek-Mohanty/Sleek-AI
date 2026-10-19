@@ -28,7 +28,7 @@ def get_application() -> FastAPI:
     ]
 
     application = FastAPI(
-        title="Findex The Search Engine",
+        title="Sleek AI",
         debug=True,
         version=1,
         docs_url='/docs',
