@@ -7,7 +7,7 @@ from app.api.dependencies.database import get_repository
 from app.core import config
 from loguru import logger
 from app.resources.helper.common import *
-from app.db.repositories.crawl import CrawlRepository
+from backend.app.db.repositories.enquiry import EnquiryRepository
 
 router = APIRouter()
 
@@ -22,7 +22,7 @@ def read_root():
     response_model = SendResponse, 
     name = "branch:get-branches")
 async def get_branches(
-    oRepository: CrawlRepository = Depends(get_repository(CrawlRepository)),
+    oRepository: EnquiryRepository = Depends(get_repository(EnquiryRepository)),
     limit : int = 25,
     page : int = 0,
     type            : str = None,
@@ -47,6 +47,19 @@ async def get_branches(
             "search"       : q, 
             "searchField"  : qf
         })
+    
+    return SendResponse(
+        data = oResult
+    ).send()
+
+@router.post("/enquirymis", 
+    response_model = SendResponse, 
+    name = "enquiry:dailymis-enquiry")
+async def dailymis(
+    payload = Body(...),
+    oEnquiry: EnquiryRepository = Depends(get_repository(EnquiryRepository))
+) -> SendResponse:
+    oResult = await oEnquiry.enquiryCreate(payload = payload)
     
     return SendResponse(
         data = oResult
