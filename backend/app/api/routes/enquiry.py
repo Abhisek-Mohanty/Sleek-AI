@@ -64,3 +64,16 @@ async def dailymis(
     return SendResponse(
         data = oResult
     ).send()
+
+@router.post("/pushPipeline", 
+    response_model = SendResponse, 
+    name = "enquiry:dailymis-enquiry")
+async def dailymis(
+    payload = Body(...),
+    oEnquiry: EnquiryRepository = Depends(get_repository(EnquiryRepository))
+) -> SendResponse:
+    oResult = await oEnquiry.pushAgent(payload = payload)
+    
+    return SendResponse(
+        data = oResult
+    ).send()

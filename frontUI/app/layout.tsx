@@ -22,7 +22,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "sleek.AI — AI-Powered Sales Funnel Management Portal",
+  title: "Sleek-AI Powered Sales Funnel Management Portal",
   description:
     "Import enquiries, generate AI-powered sales funnels, execute steps with intelligence, and track conversion progress seamlessly.",
 };

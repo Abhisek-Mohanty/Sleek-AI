@@ -62,3 +62,15 @@ class EnquiryRepository(BaseRepository):
             ).send()
         except HTTPException as error:
                     raise error
+    async def pushAgent(self, payload):
+        try:
+            enquiries = getAttr(payload,"enquiries",[])
+            
+            if len(enquiries) <= 0:
+                  return SendErrorResponse(
+                        message = "Please select enquiry(s) push to pipeline."
+                    ).send()
+                 
+                   
+        except HTTPException as error:
+            raise error
