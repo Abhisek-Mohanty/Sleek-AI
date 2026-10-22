@@ -15,3 +15,5 @@ class Enquiry(Base):
     email           = Column("email", String)
     status          = Column("status", Integer)
     sourceType      = Column("sourceType", Integer)
+    createdAt = Column("createdAt", DateTime ) 
+    updatedAt = Column("updatedAt", DateTime ) 
