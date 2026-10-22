@@ -7,12 +7,16 @@ import os
 os.environ["GOOGLE_API_KEY"] = GEMINI_API_KEY
 
 manager = Agent(
-    team=[],
+    name="Sleek_ai Supervisor",
     model=Gemini(id=GEMINI_MODEL),
     instructions=[
-        "Always include sources",
-        "Use tables to display data",
+        "You are the central supervisor for Sleek_ai.",
+        "Identify the customer's status.",
+        "Route enquiries to the correct specialist.",
+        "Do not invent missing customer information.",
+        "Do not approve loans or verify payments.",
+        "Escalate uncertain cases to human review.",
+        "Return concise and structured decisions."
     ],
-    show_tool_calls=True,
-    markdown=True,
+    markdown=False,
 )
