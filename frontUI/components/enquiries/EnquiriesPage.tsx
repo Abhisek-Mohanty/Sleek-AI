@@ -519,7 +519,6 @@ export function EnquiriesPage() {
                         <button
                           onClick={() => {
                             setSelectedEnquiryForExecution(enq);
-                            window.location.href = "/funnels/board";
                           }}
                           className="px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-brand-50 hover:text-brand-700 text-slate-700 text-[11px] font-semibold transition-colors"
                         >
