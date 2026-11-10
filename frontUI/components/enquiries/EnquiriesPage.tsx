@@ -18,6 +18,7 @@ import {
   CheckSquare,
   Square,
   MoreVertical,
+  RefreshCw,
 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { Enquiry, LeadSource, PriorityLevel, EnquiryStatus } from "@/types";
@@ -36,6 +37,8 @@ export function EnquiriesPage() {
     bulkUpdateEnquiries,
     deleteEnquiry,
     setSelectedEnquiryForExecution,
+    fetchEnquiries,
+    isFetchingEnquiries,
   } = useApp();
 
   // Filters state
@@ -193,6 +196,15 @@ export function EnquiriesPage() {
           >
             <Download className="h-3.5 w-3.5 text-slate-600" />
             Export CSV
+          </button>
+          <button
+            onClick={() => fetchEnquiries()}
+            disabled={isFetchingEnquiries}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs disabled:opacity-50"
+            title="Fetch enquiries from http://localhost:8000/enquiry"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 text-slate-500 ${isFetchingEnquiries ? "animate-spin" : ""}`} />
+            Refresh
           </button>
           <button
             onClick={() => setIsImportOpen(true)}

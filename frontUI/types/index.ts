@@ -8,6 +8,17 @@ export type LeadSource =
   | "Exhibition"
   | "Direct";
 
+export const SOURCE_TYPE_OPTIONS: Record<number | string, any> = {
+  1: "Website",
+  2: "LinkedIn",
+  3: "Referral",
+  4: "Inbound Call",
+  5: "Google Ads",
+  6: "Partner",
+  7: "Exhibition",
+  8: "Direct",
+};
+
 export type EnquiryStatus =
   | "New"
   | "Contacted"
@@ -16,6 +27,25 @@ export type EnquiryStatus =
   | "Proposal"
   | "Converted"
   | "Lost";
+
+export const STATUS_OPTIONS: Record<number | string, any> = {
+  1: "New",
+  2: "Contacted",
+  3: "In Progress",
+  4: "Qualified",
+  5: "Proposal",
+  6: "Converted",
+  7: "Lost",
+};
+
+export interface RawBackendEnquiry {
+  firstName?: string;
+  lastName?: string;
+  sourceType?: number | string;
+  status?: number | string;
+  email?: string;
+  mobile?: string;
+}
 
 export type PriorityLevel = "High" | "Medium" | "Low";
 

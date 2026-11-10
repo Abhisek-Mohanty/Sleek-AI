@@ -7,29 +7,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { X, Sparkles, UserPlus, Loader2 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
-import { LeadSource, EnquiryStatus } from "@/types";
+import { LeadSource, EnquiryStatus, SOURCE_TYPE_OPTIONS, STATUS_OPTIONS } from "@/types";
 import { toast } from "sonner";
 
-export const SOURCE_TYPE_OPTIONS: any = {
-  1: "Website",
-  2: "LinkedIn",
-  3: "Referral",
-  4: "Inbound Call",
-  5: "Google Ads",
-  6: "Partner",
-  7: "Exhibition",
-  8: "Direct",
-};
-
-export const STATUS_OPTIONS: any = {
-  1: "New",
-  2: "Contacted",
-  3: "In Progress",
-  4: "Qualified",
-  5: "Proposal",
-  6: "Converted",
-  7: "Lost",
-};
+export { SOURCE_TYPE_OPTIONS, STATUS_OPTIONS };
 
 const enquirySchema = z.object({
   firstName: z.string().trim().min(1, "First name is required"),
@@ -50,7 +31,7 @@ export type CreateEnquiryPayload = {
 };
 
 export function CreateEnquiryModal() {
-  const { isCreateEnquiryOpen, setIsCreateEnquiryOpen, addEnquiry, activeFunnel } = useApp();
+  const { isCreateEnquiryOpen, setIsCreateEnquiryOpen, addEnquiry, activeFunnel, fetchEnquiries } = useApp();
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -121,6 +102,7 @@ export function CreateEnquiryModal() {
 
       reset();
       setIsCreateEnquiryOpen(false);
+      fetchEnquiries();
     } catch (error: any) {
       if (axios.isAxiosError(error) && error.response) {
         // Backend returned HTTP 4xx/5xx (e.g. 400 Bad Request with duplicate mobile)

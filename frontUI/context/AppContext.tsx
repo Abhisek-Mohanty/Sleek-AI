@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import axios from "axios";
 import {
   Enquiry,
   SalesFunnel,
@@ -10,6 +11,11 @@ import {
   FunnelExecution,
   FunnelStage,
   SimulatedMessage,
+  LeadSource,
+  EnquiryStatus,
+  RawBackendEnquiry,
+  SOURCE_TYPE_OPTIONS,
+  STATUS_OPTIONS,
 } from "@/types";
 import {
   INITIAL_ENQUIRIES,
@@ -36,6 +42,8 @@ interface AppContextType {
   notifications: { id: string; title: string; time: string; type: string; unread: boolean }[];
   markNotificationsAsRead: () => void;
   // Enquiry operations
+  fetchEnquiries: () => Promise<void>;
+  isFetchingEnquiries: boolean;
   addEnquiry: (enquiry: Partial<Enquiry>, options?: { silent?: boolean }) => Enquiry;
   updateEnquiry: (id: string, updates: Partial<Enquiry>) => void;
   deleteEnquiry: (id: string) => void;
@@ -116,6 +124,110 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [isCreateEnquiryOpen, setIsCreateEnquiryOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [selectedEnquiryForExecution, setSelectedEnquiryForExecution] = useState<Enquiry | null>(null);
+  const [isFetchingEnquiries, setIsFetchingEnquiries] = useState(false);
+
+  const fetchEnquiries = async () => {
+    setIsFetchingEnquiries(true);
+    try {
+      // GET call to backend http://localhost:8000/enquiry to fetch {firstName, lastName, sourceType, status, email, mobile}
+      const response = await axios.get("http://localhost:8000/enquiry", {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        timeout: 5000,
+      });
+      console.log(response);
+      
+
+      const resData = response.data;
+      const list: RawBackendEnquiry[] = Array.isArray(resData?.data)
+        ? resData.data
+        : Array.isArray(resData)
+        ? resData
+        : [];
+
+      if (list.length > 0) {
+        const defaultRep = representatives[0] || INITIAL_REPRESENTATIVES[0];
+        const defaultStage = activeFunnel?.stages[0] || INITIAL_FUNNEL.stages[0];
+
+        const mapped: Enquiry[] = list.map((item, idx) => {
+          const firstName = (item.firstName || "").trim();
+          const lastName = (item.lastName || "").trim();
+          const fullName = [firstName, lastName].filter(Boolean).join(" ") || "Unnamed Lead";
+
+          const rawStatus = item.status;
+          let statusLabel: EnquiryStatus = "New";
+          if (typeof rawStatus === "number" && STATUS_OPTIONS[rawStatus]) {
+            statusLabel = STATUS_OPTIONS[rawStatus];
+          } else if (typeof rawStatus === "string") {
+            const numStatus = Number(rawStatus);
+            if (!isNaN(numStatus) && STATUS_OPTIONS[numStatus]) {
+              statusLabel = STATUS_OPTIONS[numStatus];
+            } else if (rawStatus) {
+              statusLabel = rawStatus as EnquiryStatus;
+            }
+          }
+
+          const rawSource = item.sourceType;
+          let sourceLabel: LeadSource = "Website";
+          if (typeof rawSource === "number" && SOURCE_TYPE_OPTIONS[rawSource]) {
+            sourceLabel = SOURCE_TYPE_OPTIONS[rawSource];
+          } else if (typeof rawSource === "string") {
+            const numSource = Number(rawSource);
+            if (!isNaN(numSource) && SOURCE_TYPE_OPTIONS[numSource]) {
+              sourceLabel = SOURCE_TYPE_OPTIONS[numSource];
+            } else if (rawSource) {
+              sourceLabel = rawSource as LeadSource;
+            }
+          }
+
+          const id = item.mobile ? `enq_${item.mobile.replace(/[^0-9]/g, "")}` : `enq_${idx}_${Date.now()}`;
+
+          return {
+            id,
+            enquiryNumber: `EQ-${String(idx + 1).padStart(6, "0")}`,
+            firstName,
+            lastName,
+            fullName,
+            mobile: item.mobile || "",
+            email: item.email || "",
+            city: "San Francisco",
+            company: "Independent",
+            source: sourceLabel,
+            sourceType: item.sourceType ?? 1,
+            dateCreated: new Date().toISOString(),
+            assignedRepId: defaultRep.id,
+            assignedRepName: defaultRep.name,
+            currentFunnelId: activeFunnelId,
+            currentStageId: defaultStage?.id || "stg_new",
+            currentStageName: defaultStage?.name || "New Lead",
+            status: statusLabel,
+            priority: "Medium",
+            lastContactedDate: new Date().toISOString(),
+            nextFollowUpDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+            leadScore: 72,
+            estimatedValue: 25000,
+            tags: ["Inbound"],
+            notes: [],
+            aiSummary: "Fetched from backend CRM database.",
+            aiRecommendedAction: "Initiate first touch discovery contact.",
+            daysInStage: 0,
+            activitiesCount: 0,
+          };
+        });
+
+        setEnquiries(mapped);
+      }
+    } catch (e) {
+      console.warn("Backend API (http://localhost:8000/enquiry) unreachable or offline, using local state:", e);
+    } finally {
+      setIsFetchingEnquiries(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEnquiries();
+  }, []);
 
   // Load from local storage
   useEffect(() => {
@@ -728,6 +840,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         notifications,
         markNotificationsAsRead,
         addEnquiry,
+        fetchEnquiries,
+        isFetchingEnquiries,
         updateEnquiry,
         deleteEnquiry,
         bulkUpdateEnquiries,

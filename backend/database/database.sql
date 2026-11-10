@@ -6,7 +6,9 @@
   `mobile` varchar(15) DEFAULT NULL,
   `email` varchar(50) DEFAULT NULL,
   `status` int(11) DEFAULT NULL,
-  'sourceType' int(11) DEFAULT NULL,
+  `sourceType` int(11) DEFAULT NULL,
+  `createdAt` DATETIME DEFAULT NULL,
+  `updatedAt` DATETIME DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
