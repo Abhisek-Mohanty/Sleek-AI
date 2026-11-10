@@ -33,7 +33,7 @@ def decisionMaker(state: LeadState) -> ManagerDecision:
 
     status = state.status
 
-    if status in {"OPTED_OUT", "CLOSED"}:
+    if status in {"REJECT", "CLOSED"}:
         return ManagerDecision(
             specialist="none",
             action=Action.COMPLETE,

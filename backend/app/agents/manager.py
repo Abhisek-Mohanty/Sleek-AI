@@ -22,4 +22,5 @@ async def mangerWork(enquiry:dict):
         tools=[decisionMaker(enquiry)],
         markdown=False,
     )
-    return manager
+    print("\n\n\n\n\n",manager)
+    # return manager
