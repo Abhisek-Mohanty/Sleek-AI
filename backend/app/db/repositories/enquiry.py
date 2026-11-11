@@ -19,13 +19,7 @@ class EnquiryRepository(BaseRepository):
     async def getList(self, paggination=None, filter=None):
         try:
             query = self.db_session.query(
-                Enquiry.firstName,
-                Enquiry.lastName,
-                Enquiry.sourceType,
-                Enquiry.status,
-                Enquiry.email,
-                Enquiry.mobile,
-                Enquiry.createdAt
+                Enquiry
             )
 
             if filter:
@@ -65,20 +59,7 @@ class EnquiryRepository(BaseRepository):
                     offset = 0
                 query = query.offset(offset).limit(limit)
 
-            rows = query.all()
-
-            enquiries = [
-                {
-                    "firstName": row.firstName,
-                    "lastName": row.lastName,
-                    "sourceType": row.sourceType,
-                    "status": row.status,
-                    "email": row.email,
-                    "mobile": row.mobile,
-                    "createdAt":row.createdAt
-                }
-                for row in rows
-            ]
+            enquiries = query.all()
 
             print("\n\n\n\n\n",enquiries)
 
@@ -112,6 +93,8 @@ class EnquiryRepository(BaseRepository):
             
             oEnquiry = self.mapDataToModel(Enquiry( ),payload)
             oEnquiry = self.save(oEnquiry)
+            oEnquiry.createdAt = Moment().now
+            oEnquiry.updatedAt = Moment().now
             
             oEnquiry.enquiryNumber = "EQ-" + str(oEnquiry.id).rjust(9, '0')
                 

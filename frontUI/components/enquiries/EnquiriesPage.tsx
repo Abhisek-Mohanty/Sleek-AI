@@ -422,11 +422,12 @@ export function EnquiriesPage() {
                     )}
                   </button>
                 </th>
+                <th className="py-3 px-4">Lead ID</th>
                 <th className="py-3 px-4">Lead Name & Company</th>
                 <th className="py-3 px-4">Contact Info</th>
-                <th className="py-3 px-4">Current Stage</th>
-                <th className="py-3 px-4">AI Score</th>
-                <th className="py-3 px-4">Value</th>
+                <th className="py-3 px-4">Mobile Number</th>
+                {/* <th className="py-3 px-4">AI Score</th>
+                <th className="py-3 px-4">Value</th> */}
                 <th className="py-3 px-4">Status</th>
                 <th className="py-3 px-4">Source</th>
                 <th className="py-3 px-4">Created</th>
@@ -465,35 +466,16 @@ export function EnquiriesPage() {
                         )}
                       </td>
                       <td className="py-3 px-4">
+                        <div className="font-semibold text-slate-900">{enq.enquiryNumber}</div>
+                      </td>
+                      <td className="py-3 px-4">
                         <div className="font-semibold text-slate-900">{enq.fullName}</div>
-                        <div className="text-[11px] text-slate-600">
-                          {enq.company || "Independent"}{enq.city ? ` · ${enq.city}` : ""}
-                        </div>
                       </td>
                       <td className="py-3 px-4 text-slate-700">
                         <div>{enq.email}</div>
-                        <div className="text-[11px] text-slate-600">{enq.mobile}</div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-800 font-medium text-[11px]">
-                          {enq.currentStageName}
-                        </span>
-                        <div className="text-[10px] text-slate-600 mt-0.5">
-                          {enq.daysInStage} days in stage
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-1.5 font-bold text-slate-900">
-                          <span
-                            className={`h-2 w-2 rounded-full ${
-                              enq.leadScore >= 80 ? "bg-emerald-500" : enq.leadScore >= 60 ? "bg-amber-500" : "bg-slate-400"
-                            }`}
-                          />
-                          <span>{enq.leadScore}</span>
-                        </div>
                       </td>
                       <td className="py-3 px-4 font-semibold text-slate-900">
-                        {formatCurrency(enquiryValue(enq))}
+                        {enq.mobile}
                       </td>
                       <td className="py-3 px-4">
                         <span

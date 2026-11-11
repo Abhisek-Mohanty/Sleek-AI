@@ -87,7 +87,7 @@ const STORAGE_KEY = "sleek_ai_storage_v1";
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [isClient, setIsClient] = useState(false);
-  const [enquiries, setEnquiries] = useState<Enquiry[]>(INITIAL_ENQUIRIES);
+  const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
   const [funnels, setFunnels] = useState<SalesFunnel[]>([INITIAL_FUNNEL]);
   const [activeFunnelId, setActiveFunnelId] = useState<string>("fnl_enterprise_core");
   const [executions, setExecutions] = useState<Record<string, FunnelExecution>>(INITIAL_EXECUTIONS);
@@ -812,7 +812,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const resetToDemoData = () => {
-    setEnquiries(INITIAL_ENQUIRIES);
+    // setEnquiries(INITIAL_ENQUIRIES);
     setFunnels([INITIAL_FUNNEL]);
     setActiveFunnelId("fnl_enterprise_core");
     setExecutions(INITIAL_EXECUTIONS);

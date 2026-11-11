@@ -24,6 +24,7 @@ import { useApp } from "@/context/AppContext";
 import { generateSuggestedMessage } from "@/lib/mock-ai";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import axios from "axios";
 
 export function ExecutionDrawer() {
   const {
@@ -69,6 +70,36 @@ export function ExecutionDrawer() {
       sentAt: new Date().toISOString(),
     });
   };
+
+  const pushtoAgent = async (id:any) => {
+    const payload = {id:id}
+    try{
+       const response = await axios.post("http://localhost:8000/enquiry/pushToAgent", payload, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });  
+    }catch(error: any){
+      if (axios.isAxiosError(error) && error.response) {
+        // Backend returned HTTP 4xx/5xx (e.g. 400 Bad Request with duplicate mobile)
+        const resData = error.response.data;
+        let errorMsg = "Failed to create enquiry";
+        if (resData) {
+          if (typeof resData.detail === "string") {
+            errorMsg = resData.detail;
+          } else if (Array.isArray(resData.detail)) {
+            errorMsg = resData.detail.map((e: any) => e.msg || e.message).join(", ");
+          } else if (resData.message) {
+            errorMsg = resData.message;
+          }
+        }
+        toast.error(errorMsg);
+      }
+      
+
+    }
+
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
@@ -149,17 +180,17 @@ export function ExecutionDrawer() {
         </div>
 
         {/* Content Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        {/* <div className="flex-1 overflow-y-auto p-6 space-y-6"> */}
           {/* Simulation Notice Disclaimer */}
-          <div className="flex items-start gap-2.5 rounded-xl bg-amber-50/80 border border-amber-200/80 p-3 text-[11px] text-amber-800">
+          {/* <div className="flex items-start gap-2.5 rounded-xl bg-amber-50/80 border border-amber-200/80 p-3 text-[11px] text-amber-800">
             <ShieldAlert className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
             <div>
               <span className="font-bold">Simulation Mode:</span> No real messages or calls are dispatched. Suggested messages and checklist executions are recorded locally in the demo sandbox.
             </div>
-          </div>
+          </div> */}
 
           {/* Current Stage Objective & Criteria */}
-          <div className="rounded-2xl border border-slate-200/80 p-4 space-y-2 bg-slate-50/40">
+          {/* <div className="rounded-2xl border border-slate-200/80 p-4 space-y-2 bg-slate-50/40">
             <div className="flex items-center justify-between text-xs">
               <span className="font-bold text-slate-900 uppercase tracking-wider">
                 Stage Purpose & Objective
@@ -179,10 +210,10 @@ export function ExecutionDrawer() {
                 <span className="font-semibold text-slate-800">Exit Criteria:</span> {currentStage.completionCriteria}
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Action Items Checklist */}
-          <div>
+          {/* <div>
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
                 Stage Execution Checklist ({completedActions.length}/{currentStage.requiredActions.length})
@@ -192,9 +223,9 @@ export function ExecutionDrawer() {
                   <CheckCircle2 className="h-3.5 w-3.5" /> All items checked
                 </span>
               )}
-            </div>
+            </div> */}
 
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               {currentStage.requiredActions.map((action, idx) => {
                 const isChecked = completedActions.includes(action);
                 return (
@@ -220,10 +251,10 @@ export function ExecutionDrawer() {
                 );
               })}
             </div>
-          </div>
+          </div> */}
 
           {/* AI Suggested Message Box */}
-          <div className="rounded-2xl border border-indigo-200/90 bg-gradient-to-b from-indigo-50/40 via-white to-white p-4 shadow-subtle space-y-3">
+          {/* <div className="rounded-2xl border border-indigo-200/90 bg-gradient-to-b from-indigo-50/40 via-white to-white p-4 shadow-subtle space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="h-6 w-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center">
@@ -236,10 +267,10 @@ export function ExecutionDrawer() {
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
                 Auto-Personalized
               </span>
-            </div>
+            </div> */}
 
             {/* Channel Switcher */}
-            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100/80 text-xs">
+            {/* <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100/80 text-xs">
               <button
                 onClick={() => setActiveChannel("email")}
                 className={cn(
@@ -267,20 +298,20 @@ export function ExecutionDrawer() {
               >
                 <Phone className="h-3 w-3" /> Call Script
               </button>
-            </div>
+            </div> */}
 
             {/* Generated message text preview */}
-            <div className="p-3 rounded-xl bg-white border border-slate-200 text-xs text-slate-800 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto font-mono text-[11px]">
+            {/* <div className="p-3 rounded-xl bg-white border border-slate-200 text-xs text-slate-800 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto font-mono text-[11px]">
               {suggestedMsg.subject && (
                 <div className="pb-2 mb-2 border-b border-slate-100 font-bold text-slate-900">
                   Subject: {suggestedMsg.subject}
                 </div>
               )}
               {suggestedMsg.content}
-            </div>
+            </div> */}
 
             {/* Message Action Buttons */}
-            <div className="flex items-center justify-between pt-1">
+            {/* <div className="flex items-center justify-between pt-1">
               <button
                 onClick={handleCopyMessage}
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-colors"
@@ -296,10 +327,10 @@ export function ExecutionDrawer() {
                 Simulate Dispatch
               </button>
             </div>
-          </div>
+          </div> */}
 
           {/* Simulated History for this Stage */}
-          {currentStageExec && currentStageExec.simulatedMessages.length > 0 && (
+          {/* {currentStageExec && currentStageExec.simulatedMessages.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
                 Simulated Stage Log ({currentStageExec.simulatedMessages.length})
@@ -319,7 +350,7 @@ export function ExecutionDrawer() {
               </div>
             </div>
           )}
-        </div>
+        </div> */}
 
         {/* Drawer Action Footer */}
         <div className="border-t border-slate-200/90 bg-white p-4 space-y-2">
@@ -357,7 +388,7 @@ export function ExecutionDrawer() {
               </button>
 
               <button
-                onClick={() => completeExecutionStage(enquiry.id, currentStage.id)}
+                onClick={() => pushtoAgent(enquiry.id)}
                 className={cn(
                   "inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold shadow-xs transition-all",
                   allActionsCompleted
@@ -366,7 +397,7 @@ export function ExecutionDrawer() {
                 )}
               >
                 <CheckCircle2 className="h-4 w-4" />
-                {allActionsCompleted ? "Complete & Move to Next Stage" : "Mark as Completed"}
+                Push to Agent
                 <ArrowRight className="h-3.5 w-3.5" />
               </button>
             </div>
