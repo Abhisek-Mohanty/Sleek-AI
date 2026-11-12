@@ -74,7 +74,7 @@ export function ExecutionDrawer() {
   const pushtoAgent = async (id:any) => {
     const payload = {id:id}
     try{
-       const response = await axios.post("http://localhost:8000/enquiry/pushToAgent", payload, {
+       const response = await axios.post("http://localhost:8000/enquiry/pushPipeline", payload, {
         headers: {
           "Content-Type": "application/json",
         },

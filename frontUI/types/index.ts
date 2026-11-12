@@ -21,21 +21,28 @@ export const SOURCE_TYPE_OPTIONS: Record<number | string, any> = {
 
 export type EnquiryStatus =
   | "New"
-  | "Contacted"
-  | "In Progress"
-  | "Qualified"
-  | "Proposal"
-  | "Converted"
-  | "Lost";
+  | "Validated"
+  | "Pan Pending"
+  | "Pan Received"
+  | "Crif Requested"
+  | "Crif Received"
+  | "Categorized"
+  | "Product Selected"
+  | "Payament Pending"
+  | "Applicant";
+
 
 export const STATUS_OPTIONS: Record<number | string, any> = {
-  1: "New",
-  2: "Contacted",
-  3: "In Progress",
-  4: "Qualified",
-  5: "Proposal",
-  6: "Converted",
-  7: "Lost",
+    1: "New",
+    2: "Validated",
+    3: "Pan Pending",
+    4: "Pan Received",
+    5: "Crif Requested",
+    6: "Crif Received",
+    7: "Categorized",
+    8: "Product Selected",
+    9: "Payament Pending",
+    10: "Applicant"
 };
 
 export interface RawBackendEnquiry {

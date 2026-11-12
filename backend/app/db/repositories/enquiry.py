@@ -110,7 +110,9 @@ class EnquiryRepository(BaseRepository):
 
     async def pushAgent(self, payload):
         try:
-            enquiries = getAttr(payload, "enquiries", [])
+            enquiries = getAttr(payload, "id", None)
+
+            
             
             if len(enquiries) <= 0:
                 return SendErrorResponse(
