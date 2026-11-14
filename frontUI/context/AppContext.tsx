@@ -181,7 +181,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             }
           }
 
-          const id = item.mobile ? `enq_${item.mobile.replace(/[^0-9]/g, "")}` : `enq_${idx}_${Date.now()}`;
+          const id = item.id || "";
 
           return {
             id,
@@ -292,8 +292,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const status = data.status || "New";
 
     const newEnquiry: Enquiry = {
-      id: data.id ? String(data.id) : `enq_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-      enquiryNumber: data.enquiryNumber || `ENQ-${Math.floor(100000 + Math.random() * 900000)}`,
+      id: data.id || "",
+      enquiryNumber: data.enquiryNumber || "",
       firstName,
       lastName,
       fullName,

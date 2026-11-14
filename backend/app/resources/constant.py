@@ -14,6 +14,9 @@ class ENQUIRY_STATUS(Enum):
     PRODUCT_SELECTED = 8
     PAYMENT_PENDING = 9
     APPLICANT       = 10
+    REJECT          = 11
+    CLOSED          = 12
+    PAYMENT_ELIGIBLE = 99
 
 ENQUIRY_STATUS_LIST = {
     1: "New",

@@ -12,6 +12,7 @@ from app.resources.helper.common import *
 from app.db.repositories.base import BaseRepository
 from app.resources.helper.moment import Moment
 from fastapi.encoders import jsonable_encoder
+from app.agents import manager
 
 from app.models.domain.db import *
 
@@ -110,18 +111,20 @@ class EnquiryRepository(BaseRepository):
 
     async def pushAgent(self, payload):
         try:
-            enquiries = getAttr(payload, "id", None)
+            enquiriesId = getAttr(payload, "id", None)
+            oEnquiry = self.db_session.query(Enquiry).filter(Enquiry.id == enquiriesId).first()
+            if not oEnquiry:
+                return SendErrorResponse(
+                        message = "Enquiry not found."
+                    ).send()
+            print("\n\n\n\n\n\n\n\n",jsonable_encoder(oEnquiry))
+
+            result = await manager.mangerWork(jsonable_encoder(oEnquiry))
 
             
-            
-            if len(enquiries) <= 0:
-                return SendErrorResponse(
-                    message = "Please select enquiry(s) push to pipeline."
-                ).send()
-            
             return SendSuccessResponse(
-                message = f"{len(enquiries)} enquiry(s) pushed to pipeline successfully.",
-                data = {"enquiries": enquiries}
+                message = f"{enquiriesId} enquiry(s) pushed to pipeline successfully.",
+                data = {"enquiries": enquiriesId}
             ).send()
         except HTTPException as error:
             raise error

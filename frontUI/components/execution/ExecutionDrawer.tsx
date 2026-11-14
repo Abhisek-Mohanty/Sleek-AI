@@ -77,8 +77,10 @@ export function ExecutionDrawer() {
        const response = await axios.post("http://localhost:8000/enquiry/pushPipeline", payload, {
         headers: {
           "Content-Type": "application/json",
-        },
-      });  
+        },        
+      }); 
+        toast.success("Enquiry pushed to Agent.");
+
     }catch(error: any){
       if (axios.isAxiosError(error) && error.response) {
         // Backend returned HTTP 4xx/5xx (e.g. 400 Bad Request with duplicate mobile)

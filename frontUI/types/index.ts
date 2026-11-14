@@ -46,6 +46,7 @@ export const STATUS_OPTIONS: Record<number | string, any> = {
 };
 
 export interface RawBackendEnquiry {
+  id?:number|string;
   firstName?: string;
   lastName?: string;
   sourceType?: number | string;
