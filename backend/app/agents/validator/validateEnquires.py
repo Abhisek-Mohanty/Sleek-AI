@@ -2,6 +2,7 @@ from phi.agent import Agent
 from phi.model.google import Gemini
 from app.core.config import GEMINI_API_KEY, GEMINI_MODEL
 from app.agents.agents import *
+from app.models.domain import enquiry
 import os
 from typing import Literal
 os.environ["GOOGLE_API_KEY"] = GEMINI_API_KEY
@@ -52,4 +53,5 @@ validate_enquiry = Agent(
     markdown=False,
     show_tool_calls=False,
 )
+
 
