@@ -12,7 +12,7 @@ from app.resources.helper.common import *
 from app.db.repositories.base import BaseRepository
 from app.resources.helper.moment import Moment
 from fastapi.encoders import jsonable_encoder
-from app.agents import manager
+from app.agents.manager import ManagerRepositories
 
 from app.models.domain.db import *
 
@@ -119,7 +119,7 @@ class EnquiryRepository(BaseRepository):
                     ).send()
             print("\n\n\n\n\n\n\n\n",jsonable_encoder(oEnquiry))
 
-            result = await manager.mangerWork(jsonable_encoder(oEnquiry))
+            result = await ManagerRepositories.mangerWork(self,jsonable_encoder(oEnquiry))
 
             
             return SendSuccessResponse(

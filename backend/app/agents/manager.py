@@ -7,6 +7,8 @@ import json
 import re
 from app.services.validator import ValidatorService
 from app.api.dependencies.database import get_repository
+from app.db.repositories.base import BaseRepository
+
 
 
 
@@ -33,39 +35,39 @@ class ManagerDecision(BaseModel):
     specialist: str
     action: Action
     reason: str
-async def mangerWork(enquiry:dict):
-    try:
-        manager = Agent(
-            name="Sleek_ai Supervisor",
-            model=Gemini(id=GEMINI_MODEL),
-            instructions=[
-                "You are the central supervisor for Sleek_ai.",
-                "Identify the customer's status.",
-                "Route enquiries to the correct specialist.",
-                "Do not invent missing customer information.",
-                "Do not approve loans or verify payments.",
-                "Escalate uncertain cases to human review.",
-                "Return concise and structured decisions."
-            ],
-            tools=[DecisionMaker(enquiry)],
-            response_model=ManagerDecision,
-            markdown=False,
-        )
-        messages = manager.get_messages_for_run()
-        print("\n\n\n\n\n",messages)
-        print("\n\n\n\n\n",manager)
-        result = manager.run(f"Analyze this customer enquiry and return the routing decision:\n{enquiry}")
-        print("\n\n\n\n\n\n",result)
-        content = result.content
-        # content = re.sub(r"^```(?:json)?\s*|\s*```$","",content,flags=re.IGNORECASE)
-        # print("\n\n\n\n\n\n",json.loads(content))
-        # content = json.loads(content)
-        action = content.action
-        print("\n\n\n\n\n",action,"action")
-        if action == 'validate_enquiry':
-            validate = ValidatorService()
-            actionTaken = await validate.ValidateEnquiries(enquiry)
-            print("\n\n\n\n\n\n",actionTaken,"validate_enquiry")
-            # return manager
-    except Exception as error:
-        raise error
+class ManagerRepositories(BaseRepository):
+    async def mangerWork(self, enquiry:dict):
+        try:
+            manager = Agent(
+                name="Sleek_ai Supervisor",
+                model=Gemini(id=GEMINI_MODEL),
+                instructions=[
+                    "You are the central supervisor for Sleek_ai.",
+                    "Identify the customer's status.",
+                    "Route enquiries to the correct specialist.",
+                    "Do not invent missing customer information.",
+                    "Do not approve loans or verify payments.",
+                    "Escalate uncertain cases to human review.",
+                    "Return concise and structured decisions."
+                ],
+                tools=[DecisionMaker(enquiry)],
+                response_model=ManagerDecision,
+                markdown=False,
+            )
+            messages = manager.get_messages_for_run()
+            print("\n\n\n\n\n",messages)
+            print("\n\n\n\n\n",manager)
+            result = manager.run(f"Analyze this customer enquiry and return the routing decision:\n{enquiry}")
+            print("\n\n\n\n\n\n",result)
+            content = result.content
+            # content = re.sub(r"^```(?:json)?\s*|\s*```$","",content,flags=re.IGNORECASE)
+            # print("\n\n\n\n\n\n",json.loads(content))
+            # content = json.loads(content)
+            action = content.action
+            print("\n\n\n\n\n",action,"action")
+            if action == 'validate_enquiry':
+                actionTaken = await ValidatorService.ValidateEnquiries(self,enquiry)
+                print("\n\n\n\n\n\n",actionTaken,"validate_enquiry")
+                # return manager
+        except Exception as error:
+            raise error

@@ -120,14 +120,14 @@ class BaseRepository:
             for oItem in oDeleteList:
                 self.db_session.delete(oItem)
 
-    def update(self, oModel, oData, user):
+    def update(self, oModel, oData):
         hasChange = False
         for okay in oData:
             if getattr(oModel, okay) == oData[okay]:
                 setattr(oModel, okay, oData[okay])
                 hasChange = True
         if hasChange == True:
-            oModel.updatedBy   = user.id
+            # oModel.updatedBy   = user.id
             oModel.updatedAt   = Moment().now 
     
     def mapDataToModel(self, oModel, oData, user = None, fieldList = []) -> Any:
