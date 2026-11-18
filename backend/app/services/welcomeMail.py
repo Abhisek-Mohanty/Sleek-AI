@@ -6,6 +6,8 @@ from app.resources.helper.common import *
 from app.resources.constant import *
 from app.models.domain.db import *
 from fastapi.encoders import jsonable_encoder
+import requests
+from app.core.config import MSG91
 
 
 
@@ -14,34 +16,18 @@ from fastapi.encoders import jsonable_encoder
 class WelcomeMailService(BaseRepository):
     async def ValidateEnquiries(self,enquiry):
         try:
-            email_regex = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-            valid = bool(enquiry["firstName"].strip()) and len(enquiry["mobile"]) == 13 and  bool(re.fullmatch(email_regex,enquiry["email"]))
+            url = "https://control.msg91.com/api/v5/email/send"
 
-            if not valid:
-                return {
-                        "status": "REJECT",
-                        "is_spam": True,
-                        "reason": "Validation completed",
-                        "next_action": "REJECT_ENQUIRY"
-                    }
-            check_spam = welcome_email_agent.run(f"Validate this customer enquiry:\n{enquiry}")
+            payload = "{\n  \"recipients\": [\n    {\n      \"to\": [\n        {\n          \"name\": \"Recipient1 name\",\n          \"email\": \"Recipient1 email\"\n        }\n      ],\n      \"variables\": {\n        \"name\": \"Name 1\"\n      }\n    },\n    {\n      \"to\": [\n        {\n          \"name\": \"Recipient2 name\",\n          \"email\": \"Recipient2 email\"\n        }\n      ],\n      \"cc\": [\n        {\n          \"name\": \"Recipient3 name\",\n          \"email\": \"Recipient3 email\"\n        }\n      ],\n      \"bcc\": [\n        {\n          \"name\": \"Recipient4 name\",\n          \"email\": \"Recipient4 email\"\n        }\n      ],\n      \"variables\": {\n        \"name\": \"Name 2\"\n      }\n    }\n  ],\n  \"from\": {\n    \"name\": \"Joe\",\n    \"email\": \"sender@email.address\"\n  },\n  \"domain\": \"The domain which you have registered with us. We sign DKIM with this domain.\",\n  \"reply_to\": [\n    {\n      \"email\": \"reply1@email.com\"\n    },\n    {\n      \"email\": \"reply2@email.com\"\n    }\n  ],\n  \"attachments\": [\n    {\n      \"filePath\": \"Public path for file.\",\n      \"fileName\": \"File Name\"\n    },\n    {\n      \"file\": \"File in Data URI format data:content/type;base64,<data>.\",\n      \"fileName\": \"File Name\"\n    }\n  ],\n  \"template_id\": \"YOUR_UNIQUE_TEMPLATE_NAME\"\n}"
+            headers = {
+            "accept": "application/json",
+            "authkey": MSG91,
+            "content-type": "application/json"
+            }
 
-            print("\n\n\n\n\n","ValidatorService",check_spam)
-            print("\n\n\n\n\n","ValidatorService",check_spam.content.is_spam)
+            response = requests.post(url, data=payload, headers=headers)
 
-
-            if check_spam and check_spam.content and not check_spam.content.is_spam:
-                enquiry['status'] = ENQUIRY_STATUS.VALIDATED.value
-            if check_spam and check_spam.content and check_spam.content.is_spam:
-                enquiry['status'] = ENQUIRY_STATUS.REJECT.value
-            print("\n\n\n\n","pre",enquiry)
-            oEnquiry = self.db_session.query(Enquiry).filter(Enquiry.id == enquiry['id']).first()
-            oEnquiry = self.mapDataToModel(oEnquiry,enquiry)
-            oEnquiry.updatedAt = Moment().now
-            print("\n\n\n\n","post",oEnquiry)
-            ResEnquiry = jsonable_encoder(oEnquiry)
-            self.db_session.commit()
-            return ResEnquiry
+            print(response.json())
             
             
         except HTTPException as error:
