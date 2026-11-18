@@ -26,7 +26,9 @@ class ValidatorService(BaseRepository):
                     }
             check_spam = validate_enquiry.run(f"Validate this customer enquiry:\n{enquiry}")
 
+            print("\n\n\n\n\n","ValidatorService",check_spam)
             print("\n\n\n\n\n","ValidatorService",check_spam.content.is_spam)
+
 
             if check_spam and check_spam.content and not check_spam.content.is_spam:
                 enquiry['status'] = ENQUIRY_STATUS.VALIDATED.value

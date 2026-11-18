@@ -49,7 +49,7 @@ onBoard_sms = Agent(
         "Return structured results only."
     ],
 
-    response_model=EnquiryValidationResult,
+    response_model=SendWelcomeMessageResult,
     markdown=False,
     show_tool_calls=False,
 )

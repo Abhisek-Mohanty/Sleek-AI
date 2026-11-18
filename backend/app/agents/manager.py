@@ -52,7 +52,9 @@ class ManagerRepositories(BaseRepository):
                 ],
                 tools=[DecisionMaker(enquiry)],
                 response_model=ManagerDecision,
-                markdown=False,
+                markdown=True,
+                show_tool_calls=True,
+                add_datetime_to_instructions=True,
             )
             messages = manager.get_messages_for_run()
             print("\n\n\n\n\n",messages)

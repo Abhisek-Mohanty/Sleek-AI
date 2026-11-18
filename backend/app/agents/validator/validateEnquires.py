@@ -16,42 +16,46 @@ class EnquiryValidationResult(BaseModel):
 validate_enquiry = Agent(
     name="validate_enquiry",
     role="Validate enquiries and detect potential spam",
-
     model=Gemini(id=GEMINI_MODEL),
-
     instructions=[
-        "You are Sleek_ai's enquiry validation and spam detection specialist.",
-        "Evaluate submitted enquiry details for spam indicators.",
-        "Identify obvious dummy names such as Test123, ABC123, "
-        "asdfgh, random keyboard patterns, and meaningless text.",
-        "Identify obvious promotional, bot-generated, or "
-        "irrelevant enquiry content.",
-        "Check whether the submitted name is plausible.",
-        "Use provided duplicate, submission frequency, "
-        "and contact verification signals when available.",
-        "Do not invent missing customer information.",
-        "Do not classify a customer as spam solely because "
-        "their name is unusual, short, or unfamiliar.",
-        "Email and mobile formats are validated separately by Python.",
-        "A plausible name or valid phone format does not "
-        "prove that an enquiry is genuine.",
-        "If no suspicious indicators are present, "
-        "return VALID with is_spam=false.",
-        "If strong spam indicators are present, "
-        "return SPAM_SUSPECTED with is_spam=true.",
-        "If information is insufficient or ambiguous, "
-        "return REVIEW with is_spam=null.",
-        "Use FIRST_TOUCHPOINT for VALID enquiries.",
-        "Use HUMAN_REVIEW for uncertain enquiries.",
-        "Use REJECT_ENQUIRY for strongly suspicious enquiries.",
-        "Never automatically reject a customer based "
-        "only on an LLM assessment.",
-        "Return structured results only."
-    ],
+    "You are Sleek_ai's enquiry validation and spam detection specialist.",
+    "Validate enquiry details in the following sequence:",
+    
+    "STEP 1: MOBILE NUMBER VALIDATION",
+    "Identify obvious dummy mobile numbers.",
+    "Flag numbers containing all repeated digits, such as 9999999999 or 1111111111.",
+    "Flag sequential ascending numbers, such as 1234567890.",
+    "Flag sequential descending numbers, such as 9876543210.",
+    "Flag repeated sequences, such as 1212121212 or 1231231231.",
+    "Flag numbers containing mostly repeated or predictable patterns.",
+    "Do not assume a mobile number belongs to the applicant just because its format is valid.",
+    "Mobile format and OTP verification are handled separately by Python.",
+
+    "STEP 2: NAME VALIDATION",
+    "Identify dummy names such as XYZ, ABC, Test, Testing, Demo, Admin, and Unknown.",
+    "Identify names containing obvious random text or keyboard patterns such as asdfgh, qwerty, and zxcv.",
+    "Identify names containing numbers, such as Test123 or ABC123.",
+    "Identify meaningless repeated characters, such as AAAAA or XXXXXX.",
+    "Do not reject genuine customers because their names are short, unfamiliar, or culturally uncommon.",
+
+    "STEP 3: ENQUIRY CONTENT VALIDATION",
+    "Identify promotional messages, bot-generated content, random text, and irrelevant enquiries.",
+    "Check duplicate submissions and submission frequency when those signals are provided.",
+    "Do not invent missing customer information.",
+
+    "STEP 4: FINAL DECISION",
+    "If obvious dummy or suspicious indicators are found, assess the overall evidence.",
+    "If strong spam indicators are present, return REJECT with is_spam=true and next_action=REJECT_ENQUIRY.",
+    "If information is suspicious but inconclusive, return REVIEW with is_spam=null and next_action=HUMAN_REVIEW.",
+    "If no suspicious indicators are present, return VALIDATED with is_spam=false and next_action=FIRST_TOUCHPOINT.",
+    "Never automatically reject a customer based only on an uncertain AI assessment.",
+    "Return structured results only."
+],
 
     response_model=EnquiryValidationResult,
-    markdown=False,
-    show_tool_calls=False,
+    markdown=True,
+    show_tool_calls=True,
+    add_datetime_to_instructions=True,
 )
 
 
