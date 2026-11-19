@@ -6,6 +6,8 @@ from app.agents.validator.validateEnquires import validate_enquiry
 import json
 import re
 from app.services.validator import ValidatorService
+from app.services.welcomeMail import WelcomeMailService
+
 from app.api.dependencies.database import get_repository
 from app.db.repositories.base import BaseRepository
 
@@ -62,14 +64,14 @@ class ManagerRepositories(BaseRepository):
             result = manager.run(f"Analyze this customer enquiry and return the routing decision:\n{enquiry}")
             print("\n\n\n\n\n\n",result)
             content = result.content
-            # content = re.sub(r"^```(?:json)?\s*|\s*```$","",content,flags=re.IGNORECASE)
-            # print("\n\n\n\n\n\n",json.loads(content))
-            # content = json.loads(content)
             action = content.action
             print("\n\n\n\n\n",action,"action")
             if action == 'validate_enquiry':
                 actionTaken = await ValidatorService.ValidateEnquiries(self,enquiry)
                 print("\n\n\n\n\n\n",actionTaken,"validate_enquiry")
+            elif action == 'send_welcome':
+                actionTaken = await WelcomeMailService.sendWelcomeMail(self,enquiry)
+                print("\n\n\n\n\n\n",actionTaken,"send_welcome")
                 # return manager
         except Exception as error:
             raise error
