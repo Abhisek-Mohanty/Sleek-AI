@@ -18,6 +18,11 @@ class ENQUIRY_STATUS(Enum):
     CLOSED          = 12
     PAYMENT_ELIGIBLE = 99
 
+class COMMUNICATION_TYPE(Enum):
+    WELCOME_INITIAL = 1
+class STATUS(Enum):
+    SUCCESS = 1
+    FAILED = 2
 ENQUIRY_STATUS_LIST = {
     1: "New",
     2: "Validated",

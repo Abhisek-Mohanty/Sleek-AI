@@ -34,7 +34,6 @@ class ValidatorService(BaseRepository):
                 enquiry['status'] = ENQUIRY_STATUS.VALIDATED.value
             if check_spam and check_spam.content and check_spam.content.is_spam:
                 enquiry['status'] = ENQUIRY_STATUS.REJECT.value
-            print("\n\n\n\n","pre",enquiry)
             oEnquiry = self.db_session.query(Enquiry).filter(Enquiry.id == enquiry['id']).first()
             oEnquiry = self.mapDataToModel(oEnquiry,enquiry)
             oEnquiry.updatedAt = Moment().now

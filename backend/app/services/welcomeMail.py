@@ -9,20 +9,22 @@ from fastapi.encoders import jsonable_encoder
 import requests
 from app.core.config import MSG91
 
-
-
-
-
 class WelcomeMailService(BaseRepository):
-    def __init__(self):
-        self.url = "https://control.msg91.com/api/v5/email/send"
-        self.headers = {
-                    "accept": "application/json",
-                    "authkey": MSG91,
-                    "content-type": "application/json"
-                    }
+    # def __init__(self):
+    #     self.url = "https://control.msg91.com/api/v5/email/send"
+    #     self.headers = {
+    #                 "accept": "application/json",
+    #                 "authkey": MSG91,
+    #                 "content-type": "application/json"
+    #                 }
     async def sendWelcomeMail(self,enquiry):
         try:
+            url = "https://control.msg91.com/api/v5/email/send"
+            headers = {
+                        "accept": "application/json",
+                        "authkey": MSG91,
+                        "content-type": "application/json"
+                        }
             name = enquiry.get('firstName')
             email = enquiry.get('email')
 
@@ -32,7 +34,7 @@ class WelcomeMailService(BaseRepository):
                             "to": [
                                 {
                                 "name": name,
-                                "email": email
+                                "email": "abhisek.course@gmail.com"
                                 }
                             ],
                             "variables": {
@@ -48,9 +50,20 @@ class WelcomeMailService(BaseRepository):
                         "template_id": "welcome_mail_31",
                         }
 
-            response = requests.post(self.url, data=payload, headers=self.headers)
-
-            print(response.json())
+            response = requests.post(url, json=payload, headers=headers)
+            result = response.json()
+            if result.status == "success":
+                now = Moment().now
+                oCommunication = CommunicationLog(
+                    enquiryId = enquiry.get('id'),
+                    communicationType = COMMUNICATION_TYPE.WELCOME_INITIAL.value,
+                    message = json.dumps(payload),
+                    status = STATUS.SUCCESS.value,
+                    updatedAt = now,
+                    createdAt = now
+                )
+                oCommunication = self.save(oCommunication)
+                self.db_session.commit()
             
             
         except HTTPException as error:
