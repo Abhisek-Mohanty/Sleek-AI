@@ -10,11 +10,6 @@ from app.services.welcomeMail import WelcomeMailService
 
 from app.api.dependencies.database import get_repository
 from app.db.repositories.base import BaseRepository
-
-
-
-
-
 import os
 os.environ["GOOGLE_API_KEY"] = GEMINI_API_KEY
 
@@ -72,6 +67,8 @@ class ManagerRepositories(BaseRepository):
             elif action == 'send_welcome':
                 actionTaken = await WelcomeMailService.sendWelcomeMail(self,enquiry)
                 print("\n\n\n\n\n\n",actionTaken,"send_welcome")
+            elif action == 'request_pan':
+                pass
                 # return manager
         except Exception as error:
             raise error

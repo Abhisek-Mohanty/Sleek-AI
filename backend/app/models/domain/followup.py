@@ -12,6 +12,7 @@ class Followup(Base):
     dateOfAction       = Column("dateOfAction", DateTime)
     comment       = Column("comment", String)
     actionType      = Column("actionType", Integer) 
+    status      = Column("status", Integer) 
     createdAt = Column("createdAt", DateTime ) 
     updatedAt = Column("updatedAt", DateTime ) 
 

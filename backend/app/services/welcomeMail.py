@@ -72,7 +72,8 @@ class WelcomeMailService(BaseRepository):
                     enquiryId = enquiry.get('id'),
                     dateOfAction = next_followup,
                     comment = "Welcome Followup",
-                    actionType = "request_pan",
+                    actionType = FOLLOWUP_ACTION.REQUEST_PAN.value,
+                    status = FOLLOWUP_STATUS.ACTIVE.value,
                     updatedAt = now,
                     createdAt = now
                 )

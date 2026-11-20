@@ -23,6 +23,28 @@ class COMMUNICATION_TYPE(Enum):
 class STATUS(Enum):
     SUCCESS = 1
     FAILED = 2
+
+class FOLLOWUP_ACTION(Enum):
+    VALIDATE = 1
+    SEND_WELCOME = 2
+    WAIT = 3
+    REQUEST_PAN = 4
+    REQUEST_CRIF = 5
+    CHECK_CRIF = 6
+    CATEGORIZE = 7
+    ASK_PRODUCT = 8
+    SALES_REVIEW = 9
+    REQUEST_PAYMENT = 10
+    VERIFY_PAYMENT = 11
+    COMPLETE = 12
+    HUMAN_REVIEW = 13
+class FOLLOWUP_STATUS(Enum):
+    ACTIVE = 1
+    CLOSED = 2
+    
+
+
+
 ENQUIRY_STATUS_LIST = {
     1: "New",
     2: "Validated",
