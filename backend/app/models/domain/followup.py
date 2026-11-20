@@ -8,7 +8,7 @@ from sqlalchemy.orm import relationship
 class Followup(Base):
     __tablename__ = "Followups"
     id = Column("id", Integer, primary_key=True, index=True, autoincrement=True)
-    enquiryId = Column("enquiryId", Integer, ForeignKey("enquiries.id")  ) 
+    enquiryId = Column("enquiryId", Integer, ForeignKey("Enquiries.id")  ) 
     dateOfAction       = Column("dateOfAction", DateTime)
     comment       = Column("comment", String)
     actionType      = Column("actionType", Integer) 
@@ -16,6 +16,6 @@ class Followup(Base):
     updatedAt = Column("updatedAt", DateTime ) 
 
 
-    Enquiry = relationship("Enquiry", back_populates="ActionLog")
+    Enquiry = relationship("Enquiry", back_populates="Followup")
     
     

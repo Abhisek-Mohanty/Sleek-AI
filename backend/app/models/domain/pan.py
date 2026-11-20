@@ -8,8 +8,8 @@ from sqlalchemy.orm import relationship
 class Pan(Base):
     __tablename__ = "Pans"
     id = Column("id", Integer, primary_key=True, index=True, autoincrement=True)
-    enquiryId = Column("enquiryId", Integer, ForeignKey("enquiries.id")  ) 
-    panNumber       = Column("panNumber", String, ForeignKey("BureauSoftpulls.panNumber"))
+    enquiryId = Column("enquiryId", Integer, ForeignKey("Enquiries.id")  ) 
+    panNumber       = Column("panNumber", String)
     fullName = Column("fullName", String ) 
     firstName = Column("firstName", String ) 
     lastName = Column("lastName", String ) 

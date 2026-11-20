@@ -16,4 +16,12 @@ class Enquiry(Base):
     status          = Column("status", Integer)
     sourceType      = Column("sourceType", Integer)
     createdAt = Column("createdAt", DateTime ) 
-    updatedAt = Column("updatedAt", DateTime ) 
+    updatedAt = Column("updatedAt", DateTime )
+
+    ActionLog         = relationship("ActionLog", back_populates="Enquiry")
+    CommunicationLog         = relationship("CommunicationLog", back_populates="Enquiry")
+    Followup         = relationship("Followup", back_populates="Enquiry")
+    Pan         = relationship("Pan", back_populates="Enquiry")
+
+
+

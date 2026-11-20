@@ -8,7 +8,7 @@ from sqlalchemy.orm import relationship
 class ActionLog(Base):
     __tablename__ = "ActionLogs"
     id = Column("id", Integer, primary_key=True, index=True, autoincrement=True)
-    enquiryId = Column("enquiryId", Integer, ForeignKey("enquiries.id")  ) 
+    enquiryId = Column("enquiryId", Integer, ForeignKey("Enquiries.id")  ) 
     agentName       = Column("agentName", String)
     comment       = Column("comment", String)
     actionType      = Column("actionType", Integer) 

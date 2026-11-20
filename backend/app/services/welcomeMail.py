@@ -52,7 +52,10 @@ class WelcomeMailService(BaseRepository):
 
             response = requests.post(url, json=payload, headers=headers)
             result = response.json()
-            if result.status == "success":
+            oEnquiry = self.db_session.query(Enquiry).filter(Enquiry.id == enquiry['id']).first()
+            if result.get('status') == "success":
+                oEnquiry.status = ENQUIRY_STATUS.PAN_PENDING.value
+                oEnquiry.updatedAt = Moment().now
                 now = Moment().now
                 oCommunication = CommunicationLog(
                     enquiryId = enquiry.get('id'),
@@ -64,7 +67,19 @@ class WelcomeMailService(BaseRepository):
                 )
                 oCommunication = self.save(oCommunication)
                 self.db_session.commit()
-            
-            
+                next_followup = now + timedelta(hours=5)
+                oNextFollowup = Followup(
+                    enquiryId = enquiry.get('id'),
+                    dateOfAction = next_followup,
+                    comment = "Welcome Followup",
+                    actionType = "request_pan",
+                    updatedAt = now,
+                    createdAt = now
+                )
+                oNextFollowup = self.save(oNextFollowup)
+                self.db_session.commit()
+            else:
+                raise result
+
         except HTTPException as error:
             raise error

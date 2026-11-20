@@ -8,7 +8,7 @@ from sqlalchemy.orm import relationship
 class CommunicationLog(Base):
     __tablename__ = "CommunicationLogs"
     id = Column("id", Integer, primary_key=True, index=True, autoincrement=True)
-    enquiryId = Column("enquiryId", Integer, ForeignKey("enquiries.id")  ) 
+    enquiryId = Column("enquiryId", Integer, ForeignKey("Enquiries.id")  ) 
     communicationType      = Column("communicationType", Integer) 
     message = Column("message", String ) 
     status = Column("status", Integer ) 
@@ -16,6 +16,6 @@ class CommunicationLog(Base):
     updatedAt = Column("updatedAt", DateTime ) 
 
 
-    Enquiry = relationship("Enquiry", back_populates="ActionLog")
+    Enquiry = relationship("Enquiry", back_populates="CommunicationLog")
     
     
