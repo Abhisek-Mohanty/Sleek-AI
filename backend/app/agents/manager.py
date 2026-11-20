@@ -7,6 +7,8 @@ import json
 import re
 from app.services.validator import ValidatorService
 from app.services.welcomeMail import WelcomeMailService
+from app.services.panFollowup import PANFollowupMailService
+
 
 from app.api.dependencies.database import get_repository
 from app.db.repositories.base import BaseRepository
@@ -68,7 +70,8 @@ class ManagerRepositories(BaseRepository):
                 actionTaken = await WelcomeMailService.sendWelcomeMail(self,enquiry)
                 print("\n\n\n\n\n\n",actionTaken,"send_welcome")
             elif action == 'request_pan':
-                pass
+                actionTaken = await PANFollowupMailService.sendPanFollowupMail(self,enquiry)
+                print("\n\n\n\n\n\n",actionTaken,"send_welcome")
                 # return manager
         except Exception as error:
             raise error
