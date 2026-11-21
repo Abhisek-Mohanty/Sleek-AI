@@ -60,30 +60,31 @@ class PANFollowupMailService(BaseRepository):
                 result = response.json()
                 oEnquiry = self.db_session.query(Enquiry).filter(Enquiry.id == enquiry['id']).first()
                 if result.get('status') == "success":
-                    # oEnquiry.status = ENQUIRY_STATUS.PAN_PENDING.value
-                    # oEnquiry.updatedAt = Moment().now
-                    # now = Moment().now
-                    # oCommunication = CommunicationLog(
-                    #     enquiryId = enquiry.get('id'),
-                    #     communicationType = COMMUNICATION_TYPE.WELCOME_INITIAL.value,
-                    #     message = json.dumps(payload),
-                    #     status = STATUS.SUCCESS.value,
-                    #     updatedAt = now,
-                    #     createdAt = now
-                    # )
-                    # oCommunication = self.save(oCommunication)
-                    # self.db_session.commit()
-                    # next_followup = now + timedelta(hours=5)
-                    # oNextFollowup = Followup(
-                    #     enquiryId = enquiry.get('id'),
-                    #     dateOfAction = next_followup,
-                    #     comment = "Welcome Followup",
-                    #     actionType = FOLLOWUP_ACTION.REQUEST_PAN.value,
-                    #     status = FOLLOWUP_STATUS.ACTIVE.value,
-                    #     updatedAt = now,
-                    #     createdAt = now
-                    # )
-                    # oNextFollowup = self.save(oNextFollowup)
+                    print("success")
+                    oEnquiry.status = ENQUIRY_STATUS.PAN_PENDING.value
+                    oEnquiry.updatedAt = Moment().now
+                    now = Moment().now
+                    oCommunication = CommunicationLog(
+                        enquiryId = enquiry.get('id'),
+                        communicationType = COMMUNICATION_TYPE.WELCOME_INITIAL.value,
+                        message = json.dumps(payload),
+                        status = STATUS.SUCCESS.value,
+                        updatedAt = now,
+                        createdAt = now
+                    )
+                    oCommunication = self.save(oCommunication)
+                    self.db_session.commit()
+                    next_followup = now + timedelta(hours=5)
+                    oNextFollowup = Followup(
+                        enquiryId = enquiry.get('id'),
+                        dateOfAction = next_followup,
+                        comment = "Welcome Followup",
+                        actionType = FOLLOWUP_ACTION.REQUEST_PAN.value,
+                        status = FOLLOWUP_STATUS.ACTIVE.value,
+                        updatedAt = now,
+                        createdAt = now
+                    )
+                    oNextFollowup = self.save(oNextFollowup)
                     self.db_session.commit()
                 else:
                     raise result

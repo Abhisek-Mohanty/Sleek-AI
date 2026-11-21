@@ -15,7 +15,7 @@ class ValidatorService(BaseRepository):
     async def ValidateEnquiries(self,enquiry):
         try:
             email_regex = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-            valid = bool(enquiry["firstName"].strip()) and len(enquiry["mobile"]) == 13 and  bool(re.fullmatch(email_regex,enquiry["email"]))
+            valid = bool(enquiry["firstName"].strip()) and len(enquiry["mobile"]) == 10 and  bool(re.fullmatch(email_regex,enquiry["email"]))
 
             if not valid:
                 return {
