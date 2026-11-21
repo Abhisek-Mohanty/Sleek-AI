@@ -7,6 +7,7 @@ from app.resources.constant import *
 from app.models.domain.db import *
 from fastapi.encoders import jsonable_encoder
 import requests
+from app.core.config import *
 from app.core.config import MSG91
 
 class PANFollowupMailService(BaseRepository):
@@ -20,6 +21,8 @@ class PANFollowupMailService(BaseRepository):
                         }
             name = enquiry.get('firstName')
             email = enquiry.get('email')
+            redirect_url = generate_consent_url(enquiry,REDIRECT_URL)
+
 
             oFollowup = self.db_session.query(
                             Followup
@@ -44,7 +47,8 @@ class PANFollowupMailService(BaseRepository):
                                 ],
                                 "variables": {
                                     "Client_Name": name,
-                                    "Custom_Email_Body":agent_mail.content.email_body
+                                    "Custom_Email_Body":agent_mail.content.email_body,
+                                    "Portal_URL": redirect_url
                                 }
                                 }
                             ],

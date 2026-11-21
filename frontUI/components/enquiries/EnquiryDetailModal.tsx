@@ -18,6 +18,7 @@ import {
   Edit2,
   ChevronRight,
   TrendingUp,
+  ExternalLink,
 } from "lucide-react";
 import { Enquiry, FunnelStage } from "@/types";
 import { useApp } from "@/context/AppContext";
@@ -123,6 +124,21 @@ export function EnquiryDetailModal({ enquiry, onClose }: EnquiryDetailModalProps
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
+                const url = `${origin}/consent?id=${encodeURIComponent(enquiry.id)}&name=${encodeURIComponent(enquiry.fullName)}&email=${encodeURIComponent(enquiry.email)}&mobile=${encodeURIComponent(enquiry.mobile)}&ref=${encodeURIComponent(enquiry.enquiryNumber || "")}`;
+                navigator.clipboard.writeText(url);
+                toast.success("Customer PAN & Consent Link copied!", {
+                  description: "Send this URL to the customer via email for loan analysis report authorization.",
+                });
+              }}
+              title="Copy customer-facing PAN & Consent link for email"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs transition-colors"
+            >
+              <ExternalLink className="h-3.5 w-3.5 text-brand-600" />
+              <span>Customer Portal Link</span>
+            </button>
             <button
               onClick={() => {
                 setSelectedEnquiryForExecution(enquiry);

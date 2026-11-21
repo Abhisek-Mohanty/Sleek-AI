@@ -32,6 +32,8 @@ MYSQL_PWD:str  = config("MYSQL_PWD",cast=str,default="")
 MYSQL_DB:str   = config("MYSQL_DB",cast=str,default="")
 MSG91:str   = config("MSG91",cast=str,default="")
 DEBUG: bool = config("DEBUG", cast=bool, default=False)
+REDIRECT_URL: str = config("REDIRECT_URL", cast=str, default="/")
+
 
 
 GEMINI_API_KEY:str  = config("GEMINI_API_KEY",cast=str,default="")

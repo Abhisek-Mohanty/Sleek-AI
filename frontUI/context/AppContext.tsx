@@ -87,7 +87,7 @@ const STORAGE_KEY = "sleek_ai_storage_v1";
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [isClient, setIsClient] = useState(false);
-  const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
+  const [enquiries, setEnquiries] = useState<Enquiry[]>(INITIAL_ENQUIRIES);
   const [funnels, setFunnels] = useState<SalesFunnel[]>([INITIAL_FUNNEL]);
   const [activeFunnelId, setActiveFunnelId] = useState<string>("fnl_enterprise_core");
   const [executions, setExecutions] = useState<Record<string, FunnelExecution>>(INITIAL_EXECUTIONS);
@@ -136,15 +136,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         },
         timeout: 5000,
       });
-      console.log(response);
-      
 
       const resData = response.data;
       const list: RawBackendEnquiry[] = Array.isArray(resData?.data)
         ? resData.data
         : Array.isArray(resData)
-        ? resData
-        : [];
+          ? resData
+          : [];
 
       if (list.length > 0) {
         const defaultRep = representatives[0] || INITIAL_REPRESENTATIVES[0];
@@ -181,7 +179,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             }
           }
 
-          const id = item.id || "";
+          const id = item.id !== undefined && item.id !== null ? String(item.id) : (item.mobile ? `enq_${item.mobile.replace(/[^0-9]/g, "")}` : `enq_${idx}_${Date.now()}`);
 
           return {
             id,
@@ -292,8 +290,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const status = data.status || "New";
 
     const newEnquiry: Enquiry = {
-      id: data.id || "",
-      enquiryNumber: data.enquiryNumber || "",
+      id: data.id ? String(data.id) : `enq_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      enquiryNumber: data.enquiryNumber || `ENQ-${Math.floor(100000 + Math.random() * 900000)}`,
       firstName,
       lastName,
       fullName,
@@ -812,7 +810,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const resetToDemoData = () => {
-    // setEnquiries(INITIAL_ENQUIRIES);
+    setEnquiries(INITIAL_ENQUIRIES);
     setFunnels([INITIAL_FUNNEL]);
     setActiveFunnelId("fnl_enterprise_core");
     setExecutions(INITIAL_EXECUTIONS);

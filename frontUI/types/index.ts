@@ -21,6 +21,12 @@ export const SOURCE_TYPE_OPTIONS: Record<number | string, any> = {
 
 export type EnquiryStatus =
   | "New"
+  | "Contacted"
+  | "In Progress"
+  | "Qualified"
+  | "Proposal"
+  | "Converted"
+  | "Lost"
   | "Validated"
   | "Pan Pending"
   | "Pan Received"
@@ -29,7 +35,10 @@ export type EnquiryStatus =
   | "Categorized"
   | "Product Selected"
   | "Payament Pending"
-  | "Applicant";
+  | "Payment Pending"
+  | "Applicant"
+  | "Reject"
+  | "Closed";
 
 
 export const STATUS_OPTIONS: Record<number | string, any> = {

@@ -4,6 +4,7 @@ import re
 import base64
 from app.resources.helper.moment import Moment
 from app.core.config import JWT_TOKEN_PREFIX, SERVER_DEFAULT_OFFSET
+from urllib.parse import urlencode
 
 from app.core import config
 # from app.api.response.http_response import SendErrorResponse
@@ -195,4 +196,15 @@ def getFormatedData(oModel, attributes = [], seperator = " "):
 def getLastSubString(vString = "", size = 4):
     if not vString : return ""
     return vString[-(size):]
+
+def generate_consent_url(enquiry: dict, origin: str) -> str:
+    params = {
+        "id": enquiry.get("id", ""),
+        "name": enquiry.get("fullName", ""),
+        "email": enquiry.get("email", ""),
+        "mobile": enquiry.get("mobile", ""),
+        "ref": enquiry.get("enquiryNumber") or ""
+    }
+
+    return f"{origin.rstrip('/')}/consent?{urlencode(params)}"
     

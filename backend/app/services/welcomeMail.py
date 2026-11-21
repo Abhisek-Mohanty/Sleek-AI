@@ -5,9 +5,11 @@ from app.api.response.http_response import SendErrorResponse, SendExportResponse
 from app.resources.helper.common import *
 from app.resources.constant import *
 from app.models.domain.db import *
+from app.core.config import *
 from fastapi.encoders import jsonable_encoder
 import requests
 from app.core.config import MSG91
+from app.resources.helper.common import *
 
 class WelcomeMailService(BaseRepository):
     # def __init__(self):
@@ -27,6 +29,7 @@ class WelcomeMailService(BaseRepository):
                         }
             name = enquiry.get('firstName')
             email = enquiry.get('email')
+            redirect_url = generate_consent_url(enquiry,REDIRECT_URL)
 
             payload = {
                         "recipients": [
@@ -34,7 +37,8 @@ class WelcomeMailService(BaseRepository):
                             "to": [
                                 {
                                 "name": name,
-                                "email": "abhisek.course@gmail.com"
+                                "email": "abhisek.course@gmail.com",
+                                "Portal_URL": redirect_url
                                 }
                             ],
                             "variables": {
