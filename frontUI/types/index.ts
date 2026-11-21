@@ -113,6 +113,10 @@ export interface Enquiry {
   aiRecommendedAction: string;
   daysInStage: number;
   activitiesCount: number;
+  pan?: string;
+  panNumber?: string;
+  crifScore?: number;
+  crifReport?: string;
 }
 
 export interface FunnelStage {
@@ -185,7 +189,7 @@ export interface FunnelExecution {
   lastUpdatedAt: string;
 }
 
-export type ActivityType = "call" | "email" | "meeting" | "follow_up" | "task";
+export type ActivityType = "call" | "email" | "meeting" | "follow_up" | "task" | "ai_insight";
 export type ActivityStatus = "pending" | "completed" | "overdue" | "cancelled";
 
 export interface Activity {

@@ -76,3 +76,17 @@ async def push_pipeline(
     return SendResponse(
         data = oResult
     ).send()
+
+@router.post("/{{id}}/collect_pan", 
+    response_model = SendResponse, 
+    name = "enquiry:push-pipeline")
+async def push_pipeline(
+    payload = Body(...),
+    id = id,
+    oEnquiry: EnquiryRepository = Depends(get_repository(EnquiryRepository))
+) -> SendResponse:
+    oResult = await oEnquiry.collectPan(payload = payload, id = id)
+    
+    return SendResponse(
+        data = oResult
+    ).send()

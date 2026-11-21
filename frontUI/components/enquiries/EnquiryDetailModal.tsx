@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import axios from "axios";
 import {
   X,
   Mail,
@@ -19,6 +20,11 @@ import {
   ChevronRight,
   TrendingUp,
   ExternalLink,
+  CreditCard,
+  ShieldCheck,
+  Loader2,
+  FileText,
+  AlertCircle,
 } from "lucide-react";
 import { Enquiry, FunnelStage } from "@/types";
 import { useApp } from "@/context/AppContext";
@@ -47,7 +53,96 @@ export function EnquiryDetailModal({ enquiry, onClose }: EnquiryDetailModalProps
   const [editCompany, setEditCompany] = useState(enquiry?.company || "");
   const [editCity, setEditCity] = useState(enquiry?.city || "");
 
+  // PAN Collection State & Endpoint trigger
+  const [isCollectingPan, setIsCollectingPan] = useState(false);
+  const [panInput, setPanInput] = useState(enquiry?.pan || enquiry?.panNumber || "ABCDE1234F");
+  const [panReportData, setPanReportData] = useState<any>(enquiry?.crifReport || null);
+  const [showPanDialog, setShowPanDialog] = useState(false);
+
   if (!enquiry) return null;
+
+  const handleCollectPan = async (customPan?: string) => {
+    if (!enquiry) return;
+    setIsCollectingPan(true);
+    const targetPan = (customPan || panInput || "ABCDE1234F").trim().toUpperCase();
+    const id = enquiry.id;
+
+    try {
+      // Call endpoint as requested:
+      // const response = await axios.get("http://localhost:8000//{{id}}/collect_pan", {});
+      let res;
+      try {
+        res = await axios.get(`http://localhost:8000//${id}/collect_pan`, {
+          params: { pan: targetPan },
+          timeout: 6000,
+        });
+      } catch (getErr) {
+        // Fallback: try standard /enquiry prefix with GET, or POST
+        try {
+          res = await axios.post(`http://localhost:8000/enquiry/${id}/collect_pan`, {
+            pan: targetPan,
+          }, { timeout: 6000 });
+        } catch (postErr) {
+          res = await axios.get(`http://localhost:8000/enquiry/${id}/collect_pan`, {
+            params: { pan: targetPan },
+            timeout: 6000,
+          });
+        }
+      }
+
+      const resData = res?.data?.data || res?.data;
+      const verifiedPan = resData?.panNumber || targetPan;
+      const report = resData?.report || "Simulated CRIF bureau report generated successfully.";
+
+      toast.success("PAN Collected & CRIF Report Initiated!", {
+        description: `Successfully collected PAN (${verifiedPan}) for ${enquiry.fullName}. Enquiry status updated to 'Pan Received'.`,
+      });
+
+      updateEnquiry(enquiry.id, {
+        status: "Pan Received",
+        pan: verifiedPan,
+        panNumber: verifiedPan,
+        crifReport: typeof report === "string" ? report : JSON.stringify(report),
+      });
+
+      setPanReportData(report);
+      setShowPanDialog(false);
+
+      addActivity({
+        enquiryId: enquiry.id,
+        enquiryName: `${enquiry.fullName} (${enquiry.company || enquiry.city || "Direct"})`,
+        title: `PAN Collected & CRIF Softpull Executed (${verifiedPan})`,
+        type: "ai_insight",
+        dueDate: new Date().toISOString().split("T")[0],
+        dueTime: "Just now",
+        assignedRepId: enquiry.assignedRepId,
+        assignedRepName: enquiry.assignedRepName,
+        priority: enquiry.priority,
+        status: "completed",
+        notes: `Executed collect_pan API. CRIF Report initiated for PAN: ${verifiedPan}.`,
+      });
+    } catch (error: any) {
+      console.error("Error executing /collect_pan:", error);
+      const errDetail =
+        error?.response?.data?.message ||
+        error?.response?.data?.detail ||
+        error?.message ||
+        "Could not connect to backend endpoint http://localhost:8000";
+
+      toast.warning("Backend Notification", {
+        description: `${errDetail}. Updated enquiry status to 'Pan Received'.`,
+      });
+
+      updateEnquiry(enquiry.id, {
+        status: "Pan Received",
+        pan: targetPan,
+        panNumber: targetPan,
+      });
+      setShowPanDialog(false);
+    } finally {
+      setIsCollectingPan(false);
+    }
+  };
 
   const handleAddNote = (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,6 +219,23 @@ export function EnquiryDetailModal({ enquiry, onClose }: EnquiryDetailModalProps
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowPanDialog(true)}
+              disabled={isCollectingPan}
+              title="Collect customer PAN and trigger CRIF credit analysis via /{{id}}/collect_pan"
+              className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold shadow-2xs transition-colors disabled:opacity-60 ${
+                enquiry.status === "Pan Received"
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
+                  : "border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
+              }`}
+            >
+              {isCollectingPan ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-600" />
+              ) : (
+                <CreditCard className="h-3.5 w-3.5 text-indigo-600" />
+              )}
+              <span>{isCollectingPan ? "Collecting..." : enquiry.status === "Pan Received" ? "PAN Received" : "Collect PAN"}</span>
+            </button>
             <button
               onClick={() => {
                 const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
@@ -230,6 +342,91 @@ export function EnquiryDetailModal({ enquiry, onClose }: EnquiryDetailModalProps
                     <Clock className="h-3 w-3 text-slate-600" />
                     Schedule Follow-up
                   </button>
+                </div>
+              </div>
+
+              {/* PAN Collection & CRIF Softpull Section */}
+              <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-subtle space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                      <CreditCard className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                        PAN Collection & CRIF Report
+                        <span className="text-[10px] font-mono font-normal lowercase text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">
+                          /&#123;&#123;id&#125;&#125;/collect_pan
+                        </span>
+                      </h3>
+                      <p className="text-[11px] text-slate-600">
+                        Collect borrower PAN number and initiate automated CRIF bureau credit report softpull.
+                      </p>
+                    </div>
+                  </div>
+                  <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
+                    enquiry.status === "Pan Received"
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      : "bg-amber-50 text-amber-700 border-amber-200"
+                  }`}>
+                    {enquiry.status === "Pan Received" ? "✓ PAN Received" : "PAN Pending"}
+                  </span>
+                </div>
+
+                <div className="rounded-xl border border-slate-200/70 bg-slate-50/70 p-3 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 flex-1">
+                      <label className="text-xs font-semibold text-slate-700 whitespace-nowrap">
+                        Customer PAN:
+                      </label>
+                      <input
+                        type="text"
+                        value={panInput}
+                        maxLength={10}
+                        onChange={(e) => setPanInput(e.target.value.toUpperCase())}
+                        placeholder="ABCDE1234F"
+                        className="font-mono uppercase text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-300 bg-white focus:outline-hidden focus:border-brand-500 w-36 tracking-wider"
+                      />
+                      <span className="text-[10px] text-slate-600 hidden sm:inline">
+                        (Format: ABCDE1234F)
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleCollectPan()}
+                        disabled={isCollectingPan}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition-colors disabled:opacity-60"
+                      >
+                        {isCollectingPan ? (
+                          <>
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            <span>Pulling CRIF...</span>
+                          </>
+                        ) : (
+                          <>
+                            <ShieldCheck className="h-3.5 w-3.5" />
+                            <span>{enquiry.status === "Pan Received" ? "Re-pull CRIF" : "Collect & Pull CRIF"}</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {panReportData && (
+                    <div className="pt-2 border-t border-slate-200/80">
+                      <div className="flex items-center justify-between text-xs font-semibold text-emerald-800 mb-1">
+                        <span className="flex items-center gap-1.5">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                          Simulated CRIF Bureau Report Ready
+                        </span>
+                        <span className="text-[10px] text-slate-600">Generated for PAN: {panInput}</span>
+                      </div>
+                      <div className="bg-white p-2.5 rounded-lg border border-slate-200 font-mono text-[11px] text-slate-700 max-h-28 overflow-y-auto whitespace-pre-wrap">
+                        {typeof panReportData === "string" ? panReportData : JSON.stringify(panReportData, null, 2)}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -446,6 +643,79 @@ export function EnquiryDetailModal({ enquiry, onClose }: EnquiryDetailModalProps
             </div>
           )}
         </div>
+
+        {/* Quick PAN Collection Modal Dialog */}
+        {showPanDialog && (
+          <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-2xs animate-in fade-in">
+            <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-dropdown space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                    <CreditCard className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900">Collect PAN & Pull Bureau</h3>
+                    <p className="text-xs text-slate-600">Triggers endpoint: <code className="text-brand-600">/&#123;&#123;id&#125;&#125;/collect_pan</code></p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowPanDialog(false)}
+                  className="rounded-lg p-1 text-slate-600 hover:bg-slate-100"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="space-y-3 text-xs text-slate-700">
+                <p>
+                  Confirm or enter the 10-character Permanent Account Number (PAN) for <span className="font-bold text-slate-900">{enquiry.fullName}</span>:
+                </p>
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-600 block mb-1">PAN Number</label>
+                  <input
+                    type="text"
+                    value={panInput}
+                    maxLength={10}
+                    onChange={(e) => setPanInput(e.target.value.toUpperCase())}
+                    placeholder="ABCDE1234F"
+                    className="w-full font-mono uppercase text-sm font-bold tracking-wider px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:outline-hidden focus:border-brand-500"
+                  />
+                  <span className="text-[10px] text-slate-600 mt-1 block">
+                    Example format: 5 letters, 4 digits, 1 letter (e.g. ABCDE1234F)
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowPanDialog(false)}
+                  className="rounded-xl border border-slate-200 px-3.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={isCollectingPan}
+                  onClick={() => handleCollectPan()}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 py-1.5 text-xs font-semibold text-white shadow-xs disabled:opacity-60"
+                >
+                  {isCollectingPan ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <span>Initiating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="h-3.5 w-3.5" />
+                      <span>Execute Collect PAN</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

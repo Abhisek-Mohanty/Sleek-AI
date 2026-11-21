@@ -13,6 +13,7 @@ from app.db.repositories.base import BaseRepository
 from app.resources.helper.moment import Moment
 from fastapi.encoders import jsonable_encoder
 from app.agents.manager import ManagerRepositories
+from app.agents.crifReport import crifReport
 
 from app.models.domain.db import *
 
@@ -126,5 +127,31 @@ class EnquiryRepository(BaseRepository):
                 message = f"{enquiriesId} enquiry(s) pushed to pipeline successfully.",
                 data = {"enquiries": enquiriesId}
             ).send()
+        except HTTPException as error:
+            raise error
+
+
+    async def collectPan(self, payload, id ):
+        try:
+            oEnquiry = self.db_session.query(Enquiry).filter(Enquiry.id == id).first()
+            self.notFound(oEnquiry)
+            pan = getAttr(payload,"pan")
+            if not pan and not bool(re.fullmatch(r"^[A-Z]{3}[PCHABFLJGT][A-Z][0-9]{4}[A-Z]$", pan)):
+                return SendErrorResponse(
+                        message = "Please provide valid PAN."
+                    ).send()
+            # oEnquiry = self.mapDataToModel(oEnquiry,payload)
+            oReport = crifReport.crif_dummy_report_agent.run({
+                                                                "panNumber": pan,
+                                                                "firstName": oEnquiry.firstName,
+                                                                "lastName": oEnquiry.lastName,
+                                                                "fullName": oEnquiry.fullName,
+                                                                "fatherName": "Sample Father",
+                                                                "category": "INDIVIDUAL"
+                                                            })
+            print("\n\n\n\n\n\n\n\n",oReport)
+            
+            
+
         except HTTPException as error:
             raise error
